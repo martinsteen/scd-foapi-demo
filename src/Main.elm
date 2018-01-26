@@ -60,7 +60,7 @@ update msg model =
         AuthResponse (Dropbox.AuthorizeOk auth) ->
             ( { model | dropboxAuth = Just auth.userAuth }
             , Dropbox.download auth.userAuth
-                { path = "/data_file_to_load.json" }
+                { path = "/data_file_to_lvvvvoad.json" }
                 |> Task.attempt FetchFileResponse
             )
 
