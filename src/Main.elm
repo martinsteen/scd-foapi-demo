@@ -5,7 +5,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Navigation
 import Dropbox exposing (..)
-import Dropbox.DownloadResponse exposing (..)
 import Task
 
 
@@ -65,7 +64,7 @@ update msg model =
         AuthResponse (Dropbox.AuthorizeOk auth) ->
             ( { model | dropboxAuth = Just auth.userAuth }
             , Dropbox.download auth.userAuth
-                { path = "endpoint-data.json" }
+                { path = "/endpoint-data.json" }
                 |> Task.attempt FetchFileResponse
             )
 
@@ -81,7 +80,12 @@ update msg model =
                     ( { model | fileContent = content.content }, Cmd.none )
 
                 Err err ->
-                    ( { model | fileContent = err }, Cmd.none )
+                    ( { model | fileContent = toString err }, Cmd.none )
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Sub.batch []
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -93,8 +97,3 @@ main =
         , view = view
         , onAuth = AuthResponse
         }
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch []
