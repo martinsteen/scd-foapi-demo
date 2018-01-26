@@ -4,7 +4,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Navigation
-import Dropbox
+import Dropbox exposing (..)
+import Dropbox.DownloadResponse exposing (..)
 import Task
 
 
@@ -17,6 +18,7 @@ type Msg
 type alias Model =
     { location : Navigation.Location
     , dropboxAuth : Maybe Dropbox.UserAuth
+    , fileContent : String
     }
 
 
@@ -24,6 +26,7 @@ initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
     , dropboxAuth = Nothing
+    , fileContent = ""
     }
 
 
@@ -37,6 +40,8 @@ view model =
         , Html.button
             [ Html.Events.onClick LogInToDropbox ]
             [ Html.text "Log in with Dropbox" ]
+        , p []
+            [ text model.fileContent ]
         ]
 
 
@@ -60,7 +65,7 @@ update msg model =
         AuthResponse (Dropbox.AuthorizeOk auth) ->
             ( { model | dropboxAuth = Just auth.userAuth }
             , Dropbox.download auth.userAuth
-                { path = "/data_file_to_lvvvvoad.json" }
+                { path = "endpoint-data.json" }
                 |> Task.attempt FetchFileResponse
             )
 
@@ -70,8 +75,13 @@ update msg model =
         AuthResponse (Dropbox.UnknownAccessTokenErr _) ->
             ( model, Cmd.none )
 
-        FetchFileResponse _ ->
-            ( model, Cmd.none )
+        FetchFileResponse resp ->
+            case resp of
+                Ok content ->
+                    ( { model | fileContent = content.content }, Cmd.none )
+
+                Err err ->
+                    ( { model | fileContent = err }, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
