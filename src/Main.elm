@@ -18,6 +18,7 @@ type alias Model =
     { location : Navigation.Location
     , dropboxAuth : Maybe Dropbox.UserAuth
     , fileContent : String
+    , errorMessage : String
     }
 
 
@@ -26,6 +27,7 @@ initialModel location =
     { location = location
     , dropboxAuth = Nothing
     , fileContent = ""
+    , errorMessage = ""
     }
 
 
@@ -34,14 +36,31 @@ view model =
     div [ class "jumbotron" ]
         [ h1 [] [ text "Simcorp Dimension front office API demo " ]
         , p []
-            [ text "Alerts"
-            ]
+            [ text "Alerts" ]
         , Html.button
             [ Html.Events.onClick LogInToDropbox ]
-            [ Html.text "Log in with Dropbox" ]
+            [ text "Log in with Dropbox" ]
         , p []
-            [ text model.fileContent ]
+            [ contentView model
+            , errorView model
+            ]
         ]
+
+
+errorView : Model -> Html Msg
+errorView model =
+    if String.isEmpty model.errorMessage then
+        text ""
+    else
+        Html.code [] [ text ("Error --> " ++ model.errorMessage) ]
+
+
+contentView : Model -> Html Msg
+contentView model =
+    if String.isEmpty model.fileContent then
+        text ""
+    else
+        Html.code [] [ text model.fileContent ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -80,12 +99,7 @@ update msg model =
                     ( { model | fileContent = content.content }, Cmd.none )
 
                 Err err ->
-                    ( { model | fileContent = toString err }, Cmd.none )
-
-
-subscriptions : Model -> Sub Msg
-subscriptions model =
-    Sub.batch []
+                    ( { model | errorMessage = toString err }, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -93,7 +107,7 @@ main =
     Dropbox.program
         { init = \location -> ( initialModel location, Cmd.none )
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = always Sub.none
         , view = view
         , onAuth = AuthResponse
         }
