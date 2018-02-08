@@ -6,6 +6,7 @@ import Html.Events exposing (..)
 import Navigation
 import Dropbox exposing (..)
 import Task
+import Date exposing (Date)
 import Json.Decode exposing (string, list, decodeString, Decoder)
 
 
@@ -13,6 +14,7 @@ type Msg
     = LogInToDropbox
     | AuthResponse Dropbox.AuthorizeResult
     | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
+    | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
 
 
 type alias Model =
@@ -69,6 +71,17 @@ contentView model =
         div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.endpoints)
 
 
+createRq : String -> Dropbox.UploadRequest
+createRq content =
+    Dropbox.UploadRequest
+        "/endpoint-data.json"
+        Overwrite
+        False
+        Nothing
+        False
+        content
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -99,6 +112,9 @@ update msg model =
         AuthResponse (Dropbox.UnknownAccessTokenErr err) ->
             ( { model | errorMessage = toString err }, Cmd.none )
 
+        PutFileReponse resp ->
+            ( model, Cmd.none )
+
         FetchFileResponse resp ->
             case resp of
                 Ok content ->
@@ -110,7 +126,20 @@ update msg model =
                             ( { model | errorMessage = toString err }, Cmd.none )
 
                 Err err ->
-                    ( { model | errorMessage = toString err }, Cmd.none )
+                    case err of
+                        PathDownloadError dlerr ->
+                            case model.dropboxAuth of
+                                Just auth ->
+                                    ( model
+                                    , Dropbox.upload auth (createRq "[ \"https://dk01ws1672.scdom.net:44320/odata/\", \"https://dk01wv2028.scdom.net:44320/odata/\" ]")
+                                        |> Task.attempt PutFileReponse
+                                    )
+
+                                Nothing ->
+                                    ( { model | errorMessage = toString err }, Cmd.none )
+
+                        _ ->
+                            ( { model | errorMessage = toString err }, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
