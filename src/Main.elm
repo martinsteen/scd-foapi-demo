@@ -1,11 +1,12 @@
 module Main exposing (..)
 
-import Html exposing (..)
+import Html exposing (Html, text, div, h1, p)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Navigation
 import Dropbox exposing (..)
 import Task
+import Json.Decode exposing (string, list, decodeString, Decoder)
 
 
 type Msg
@@ -17,16 +18,21 @@ type Msg
 type alias Model =
     { location : Navigation.Location
     , dropboxAuth : Maybe Dropbox.UserAuth
-    , fileContent : String
+    , endpoints : List String
     , errorMessage : String
     }
+
+
+endPointsDecoder : Decoder (List String)
+endPointsDecoder =
+    Json.Decode.list string
 
 
 initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
     , dropboxAuth = Nothing
-    , fileContent = ""
+    , endpoints = []
     , errorMessage = ""
     }
 
@@ -57,10 +63,10 @@ errorView model =
 
 contentView : Model -> Html Msg
 contentView model =
-    if String.isEmpty model.fileContent then
+    if List.isEmpty model.endpoints then
         text ""
     else
-        Html.code [] [ text model.fileContent ]
+        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.endpoints)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -87,16 +93,21 @@ update msg model =
                 |> Task.attempt FetchFileResponse
             )
 
-        AuthResponse (Dropbox.DropboxAuthorizeErr _) ->
-            ( model, Cmd.none )
+        AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
+            ( { model | errorMessage = toString err }, Cmd.none )
 
-        AuthResponse (Dropbox.UnknownAccessTokenErr _) ->
-            ( model, Cmd.none )
+        AuthResponse (Dropbox.UnknownAccessTokenErr err) ->
+            ( { model | errorMessage = toString err }, Cmd.none )
 
         FetchFileResponse resp ->
             case resp of
                 Ok content ->
-                    ( { model | fileContent = content.content }, Cmd.none )
+                    case decodeString endPointsDecoder content.content of
+                        Ok endpoints ->
+                            ( { model | endpoints = endpoints }, Cmd.none )
+
+                        Err err ->
+                            ( { model | errorMessage = toString err }, Cmd.none )
 
                 Err err ->
                     ( { model | errorMessage = toString err }, Cmd.none )
