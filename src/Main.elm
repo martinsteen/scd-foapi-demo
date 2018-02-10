@@ -1,13 +1,15 @@
 module Main exposing (..)
 
 import Html exposing (Html, text, div, h1, p)
-import Html.Attributes exposing (..)
+import Html.Attributes exposing (class)
 import Html.Events exposing (..)
 import Navigation
 import Dropbox exposing (..)
 import Task
 import Date exposing (Date)
-import Json.Decode exposing (string, list, decodeString, Decoder)
+import Json.Encode exposing (Value, object, string)
+import Json.Decode exposing (int, string, float, Decoder, list)
+import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 
 
 type Msg
@@ -20,21 +22,41 @@ type Msg
 type alias Model =
     { location : Navigation.Location
     , dropboxAuth : Maybe Dropbox.UserAuth
-    , endpoints : List String
+    , storage : Storage
     , errorMessage : String
     }
 
 
-endPointsDecoder : Decoder (List String)
-endPointsDecoder =
-    Json.Decode.list string
+type alias Storage =
+    { endpoints : List String }
+
+
+decodeStorage : String -> Result String Storage
+decodeStorage =
+    Json.Decode.decodeString storageDecoder
+
+
+storageDecoder : Decoder Storage
+storageDecoder =
+    decode Storage
+        |> required "endpoints" (list Json.Decode.string)
+
+
+encodeStorage : Storage -> String
+encodeStorage storage =
+    Json.Encode.encode 2 (listEncoder storage.endpoints)
+
+
+listEncoder : List String -> Value
+listEncoder list =
+    Json.Encode.object [ ( "endpoints", Json.Encode.list (List.map (\ep -> Json.Encode.string ep) list) ) ]
 
 
 initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
     , dropboxAuth = Nothing
-    , endpoints = []
+    , storage = { endpoints = [ "https://dk01ws1672.scdom.net:44320/odata", "https://dk01wv2028.scdom.net:44320/odata" ] }
     , errorMessage = ""
     }
 
@@ -65,10 +87,10 @@ errorView model =
 
 contentView : Model -> Html Msg
 contentView model =
-    if List.isEmpty model.endpoints then
+    if List.isEmpty model.storage.endpoints then
         text ""
     else
-        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.endpoints)
+        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.storage.endpoints)
 
 
 createRq : String -> Dropbox.UploadRequest
@@ -77,7 +99,7 @@ createRq content =
         "/endpoint-data.json"
         Overwrite
         False
-        Nothing
+        (Just <| Date.fromTime 0)
         False
         content
 
@@ -118,9 +140,9 @@ update msg model =
         FetchFileResponse resp ->
             case resp of
                 Ok content ->
-                    case decodeString endPointsDecoder content.content of
+                    case decodeStorage content.content of
                         Ok endpoints ->
-                            ( { model | endpoints = endpoints }, Cmd.none )
+                            ( { model | storage = endpoints }, Cmd.none )
 
                         Err err ->
                             ( { model | errorMessage = toString err }, Cmd.none )
@@ -131,7 +153,7 @@ update msg model =
                             case model.dropboxAuth of
                                 Just auth ->
                                     ( model
-                                    , Dropbox.upload auth (createRq "[ \"https://dk01ws1672.scdom.net:44320/odata/\", \"https://dk01wv2028.scdom.net:44320/odata/\" ]")
+                                    , Dropbox.upload auth (createRq (encodeStorage model.storage))
                                         |> Task.attempt PutFileReponse
                                     )
 
