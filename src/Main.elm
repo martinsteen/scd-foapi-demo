@@ -31,27 +31,6 @@ type alias Storage =
     { endpoints : List String }
 
 
-decodeStorage : String -> Result String Storage
-decodeStorage =
-    Json.Decode.decodeString storageDecoder
-
-
-storageDecoder : Decoder Storage
-storageDecoder =
-    decode Storage
-        |> required "endpoints" (list Json.Decode.string)
-
-
-encodeStorage : Storage -> String
-encodeStorage storage =
-    Json.Encode.encode 2 (listEncoder storage.endpoints)
-
-
-listEncoder : List String -> Value
-listEncoder list =
-    Json.Encode.object [ ( "endpoints", Json.Encode.list (List.map (\ep -> Json.Encode.string ep) list) ) ]
-
-
 initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
@@ -93,40 +72,14 @@ contentView model =
         div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.storage.endpoints)
 
 
-createRq : String -> Dropbox.UploadRequest
-createRq content =
-    Dropbox.UploadRequest
-        "/endpoint-data.json"
-        Overwrite
-        False
-        (Just <| Date.fromTime 0)
-        False
-        content
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         LogInToDropbox ->
-            ( model
-            , Dropbox.authorize
-                { clientId = "35lv4p68hbcchyn"
-                , state = Nothing
-                , requireRole = Nothing
-                , forceReapprove = False
-                , disableSignup = False
-                , locale = Nothing
-                , forceReauthentication = False
-                }
-                model.location
-            )
+            ( model, authorizeCmd model.location )
 
         AuthResponse (Dropbox.AuthorizeOk auth) ->
-            ( { model | dropboxAuth = Just auth.userAuth }
-            , Dropbox.download auth.userAuth
-                { path = "/endpoint-data.json" }
-                |> Task.attempt FetchFileResponse
-            )
+            ( { model | dropboxAuth = Just auth.userAuth }, downloadCmd auth.userAuth )
 
         AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
             ( { model | errorMessage = toString err }, Cmd.none )
@@ -152,10 +105,7 @@ update msg model =
                         PathDownloadError dlerr ->
                             case model.dropboxAuth of
                                 Just auth ->
-                                    ( model
-                                    , Dropbox.upload auth (createRq (encodeStorage model.storage))
-                                        |> Task.attempt PutFileReponse
-                                    )
+                                    ( model, uploadCmd auth model.storage )
 
                                 Nothing ->
                                     ( { model | errorMessage = toString err }, Cmd.none )
@@ -173,3 +123,73 @@ main =
         , view = view
         , onAuth = AuthResponse
         }
+
+
+uploadCmd : UserAuth -> Storage -> Cmd Msg
+uploadCmd auth storage =
+    storage
+        |> encodeStorage
+        |> createUploadReq
+        |> Dropbox.upload auth
+        |> Task.attempt PutFileReponse
+
+
+createUploadReq : String -> Dropbox.UploadRequest
+createUploadReq content =
+    Dropbox.UploadRequest
+        "/endpoint-data.json"
+        Overwrite
+        False
+        (Just <| Date.fromTime 0)
+        False
+        content
+
+
+authorizeCmd : Navigation.Location -> Cmd Msg
+authorizeCmd location =
+    Dropbox.authorize
+        { clientId = "35lv4p68hbcchyn"
+        , state = Nothing
+        , requireRole = Nothing
+        , forceReapprove = False
+        , disableSignup = False
+        , locale = Nothing
+        , forceReauthentication = False
+        }
+        location
+
+
+downloadCmd : Dropbox.UserAuth -> Cmd Msg
+downloadCmd auth =
+    Dropbox.download auth
+        { path = "/endpoint-data.json" }
+        |> Task.attempt FetchFileResponse
+
+
+storageDecoder : Decoder Storage
+storageDecoder =
+    decode Storage
+        |> required "endpoints" (list Json.Decode.string)
+
+
+decodeStorage : String -> Result String Storage
+decodeStorage =
+    Json.Decode.decodeString storageDecoder
+
+
+storageEncoder : Storage -> Value
+storageEncoder storage =
+    Json.Encode.object
+        [ ( "endpoints"
+          , storage.endpoints
+                |> List.map (\ep -> Json.Encode.string ep)
+                |> Json.Encode.list
+          )
+        ]
+
+
+encodeStorage : Storage -> String
+encodeStorage storage =
+    storage
+        |> storageEncoder
+        |> Json.Encode.encode 2
