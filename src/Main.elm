@@ -20,10 +20,10 @@ type Msg
 
 
 type alias Model =
-    { location : Navigation.Location
-    , dropboxAuth : Maybe Dropbox.UserAuth
-    , storage : Storage
-    , errorMessage : String
+    { storage : Storage
+    , location : Navigation.Location
+    , auth : Maybe Dropbox.UserAuth
+    , error : String
     }
 
 
@@ -34,9 +34,9 @@ type alias Storage =
 initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
-    , dropboxAuth = Nothing
+    , auth = Nothing
     , storage = { endpoints = [ "https://dk01ws1672.scdom.net:44320/odata", "https://dk01wv2028.scdom.net:44320/odata" ] }
-    , errorMessage = ""
+    , error = ""
     }
 
 
@@ -58,10 +58,10 @@ view model =
 
 errorView : Model -> Html Msg
 errorView model =
-    if String.isEmpty model.errorMessage then
+    if String.isEmpty model.error then
         text ""
     else
-        Html.code [] [ text ("Error --> " ++ model.errorMessage) ]
+        Html.code [] [ text ("Error --> " ++ model.error) ]
 
 
 contentView : Model -> Html Msg
@@ -78,17 +78,17 @@ update msg model =
         LogInToDropbox ->
             ( model, authorizeCmd model.location )
 
-        AuthResponse (Dropbox.AuthorizeOk auth) ->
-            ( { model | dropboxAuth = Just auth.userAuth }, downloadCmd auth.userAuth )
-
-        AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
-            ( { model | errorMessage = toString err }, Cmd.none )
-
-        AuthResponse (Dropbox.UnknownAccessTokenErr err) ->
-            ( { model | errorMessage = toString err }, Cmd.none )
-
         PutFileReponse resp ->
             ( model, Cmd.none )
+
+        AuthResponse (Dropbox.AuthorizeOk auth) ->
+            ( updateAuth model auth, downloadCmd auth.userAuth )
+
+        AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
+            ( updateError model err, Cmd.none )
+
+        AuthResponse (Dropbox.UnknownAccessTokenErr err) ->
+            ( updateError model err, Cmd.none )
 
         FetchFileResponse resp ->
             case resp of
@@ -98,20 +98,20 @@ update msg model =
                             ( { model | storage = endpoints }, Cmd.none )
 
                         Err err ->
-                            ( { model | errorMessage = toString err }, Cmd.none )
+                            ( updateError model err, Cmd.none )
 
                 Err err ->
                     case err of
                         PathDownloadError dlerr ->
-                            case model.dropboxAuth of
+                            case model.auth of
                                 Just auth ->
                                     ( model, uploadCmd auth model.storage )
 
                                 Nothing ->
-                                    ( { model | errorMessage = toString err }, Cmd.none )
+                                    ( updateError model err, Cmd.none )
 
                         _ ->
-                            ( { model | errorMessage = toString err }, Cmd.none )
+                            ( updateError model err, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -193,3 +193,13 @@ encodeStorage storage =
     storage
         |> storageEncoder
         |> Json.Encode.encode 2
+
+
+updateAuth : { b | auth : a } -> { d | userAuth : c } -> { b | auth : Maybe c }
+updateAuth model aauth =
+    { model | auth = Just aauth.userAuth }
+
+
+updateError : { b | error : a } -> c -> { b | error : String }
+updateError model err =
+    { model | error = toString err }
