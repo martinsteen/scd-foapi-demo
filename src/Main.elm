@@ -27,15 +27,26 @@ type alias Model =
     }
 
 
+type alias Endpoint =
+    { name : String
+    , alerts : List Int
+    }
+
+
 type alias Storage =
-    { endpoints : List String }
+    { endpoints : List Endpoint }
 
 
 initialModel : Navigation.Location -> Model
 initialModel location =
     { location = location
     , auth = Nothing
-    , storage = { endpoints = [ "https://dk01ws1672.scdom.net:44320/odata", "https://dk01wv2028.scdom.net:44320/odata" ] }
+    , storage =
+        { endpoints =
+            [ { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [] }
+            , { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [ 1, 2, 3, 4 ] }
+            ]
+        }
     , error = ""
     }
 
@@ -69,7 +80,7 @@ contentView model =
     if List.isEmpty model.storage.endpoints then
         text ""
     else
-        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint) ] ]) model.storage.endpoints)
+        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint.name) ] ]) model.storage.endpoints)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -90,28 +101,24 @@ update msg model =
         AuthResponse (Dropbox.UnknownAccessTokenErr err) ->
             ( updateError model err, Cmd.none )
 
-        FetchFileResponse resp ->
-            case resp of
-                Ok content ->
-                    case decodeStorage content.content of
-                        Ok endpoints ->
-                            ( { model | storage = endpoints }, Cmd.none )
+        FetchFileResponse (Ok content) ->
+            case decodeStorage content.content of
+                Ok endpoints ->
+                    ( { model | storage = endpoints }, Cmd.none )
 
-                        Err err ->
-                            ( updateError model err, Cmd.none )
+                Err decodeErr ->
+                    ( updateError model decodeErr, Cmd.none )
 
-                Err err ->
-                    case err of
-                        PathDownloadError dlerr ->
-                            case model.auth of
-                                Just auth ->
-                                    ( model, uploadCmd auth model.storage )
+        FetchFileResponse (Err (PathDownloadError err)) ->
+            case model.auth of
+                Just auth ->
+                    ( model, uploadCmd auth model.storage )
 
-                                Nothing ->
-                                    ( updateError model err, Cmd.none )
+                Nothing ->
+                    ( updateError model err, Cmd.none )
 
-                        _ ->
-                            ( updateError model err, Cmd.none )
+        FetchFileResponse (Err err) ->
+            ( updateError model err, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -169,7 +176,14 @@ downloadCmd auth =
 storageDecoder : Decoder Storage
 storageDecoder =
     decode Storage
-        |> required "endpoints" (list Json.Decode.string)
+        |> required "endpoints" (list endpointDecoder)
+
+
+endpointDecoder : Decoder Endpoint
+endpointDecoder =
+    decode Endpoint
+        |> required "name" Json.Decode.string
+        |> required "alerts" (list Json.Decode.int)
 
 
 decodeStorage : String -> Result String Storage
@@ -177,12 +191,20 @@ decodeStorage =
     Json.Decode.decodeString storageDecoder
 
 
+endpointEncoder : Endpoint -> Value
+endpointEncoder endpoint =
+    Json.Encode.object
+        [ ( "name", Json.Encode.string endpoint.name )
+        , ( "alerts", endpoint.alerts |> List.map (\ep -> Json.Encode.int ep) |> Json.Encode.list )
+        ]
+
+
 storageEncoder : Storage -> Value
 storageEncoder storage =
     Json.Encode.object
         [ ( "endpoints"
           , storage.endpoints
-                |> List.map (\ep -> Json.Encode.string ep)
+                |> List.map (\ep -> endpointEncoder ep)
                 |> Json.Encode.list
           )
         ]
