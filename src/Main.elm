@@ -1,7 +1,7 @@
 module Main exposing (..)
 
 import Html exposing (Html, text, div, h1, p)
-import Html.Attributes exposing (class)
+import Html.Attributes exposing (class, href, style)
 import Html.Events exposing (..)
 import Navigation
 import Dropbox exposing (..)
@@ -10,6 +10,11 @@ import Date exposing (Date)
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
+import Material
+import Material.Scheme
+import Material.Button as Button
+import Material.Options as Options exposing (css)
+import Material.Chip as Chip
 
 
 type Msg
@@ -17,6 +22,7 @@ type Msg
     | AuthResponse Dropbox.AuthorizeResult
     | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
+    | Mdl (Material.Msg Msg)
 
 
 type alias Model =
@@ -24,6 +30,7 @@ type alias Model =
     , location : Navigation.Location
     , auth : Maybe Dropbox.UserAuth
     , error : Maybe String
+    , mdl : Material.Model
     }
 
 
@@ -42,29 +49,26 @@ initialModel location =
     { auth = Nothing
     , error = Nothing
     , location = location
-    , storage =
-        { endpoints =
-            [ { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [] }
-            , { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [ 1, 2, 3, 4 ] }
-            ]
-        }
+    , storage = { endpoints = [] }
+    , mdl = Material.model
     }
+
+
+type alias Mdl =
+    Material.Model
 
 
 view : Model -> Html Msg
 view model =
     div [ class "jumbotron" ]
         [ h1 [] [ text "Simcorp Dimension front office API demo " ]
-        , p []
-            [ text "Alerts" ]
-        , Html.button
-            [ Html.Events.onClick LogInToDropbox ]
-            [ text "Log in with Dropbox" ]
+        , (loginToDropBoxButton model)
         , p []
             [ contentView model
             , errorView model
             ]
         ]
+        |> Material.Scheme.top
 
 
 errorView : Model -> Html Msg
@@ -77,12 +81,41 @@ errorView model =
             Html.div [] []
 
 
+loginToDropBoxButton : Model -> Html Msg
+loginToDropBoxButton model =
+    case model.auth of
+        Nothing ->
+            Button.render Mdl
+                [ 0 ]
+                model.mdl
+                [ Options.onClick LogInToDropbox
+                , css "margin" "0 24px"
+                ]
+                [ text "Log in with Dropbox" ]
+
+        Just auth ->
+            text ""
+
+
 contentView : Model -> Html Msg
 contentView model =
     if List.isEmpty model.storage.endpoints then
         text ""
     else
-        div [] <| text ("available endpoints") :: (List.map (\endpoint -> p [] [ Html.code [] [ text (endpoint.name) ] ]) model.storage.endpoints)
+        div []
+            (List.map
+                (\endpoint ->
+                    div []
+                        [ Chip.span
+                            [ Chip.deleteIcon "cancel" ]
+                            [ Chip.content []
+                                [ text endpoint.name ]
+                            ]
+                        , Html.br [] []
+                        ]
+                )
+                model.storage.endpoints
+            )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -121,6 +154,9 @@ update msg model =
 
         FetchFileResponse (Err err) ->
             ( updateError model err, Cmd.none )
+
+        Mdl msg_ ->
+            Material.update Mdl msg_ model
 
 
 main : Program Never Model (Dropbox.Msg Msg)
