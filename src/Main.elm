@@ -23,7 +23,7 @@ type alias Model =
     { storage : Storage
     , location : Navigation.Location
     , auth : Maybe Dropbox.UserAuth
-    , error : String
+    , error : Maybe String
     }
 
 
@@ -39,15 +39,15 @@ type alias Storage =
 
 initialModel : Navigation.Location -> Model
 initialModel location =
-    { location = location
-    , auth = Nothing
+    { auth = Nothing
+    , error = Nothing
+    , location = location
     , storage =
         { endpoints =
             [ { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [] }
             , { name = "https://dk01ws1672.scdom.net:44320/odata", alerts = [ 1, 2, 3, 4 ] }
             ]
         }
-    , error = ""
     }
 
 
@@ -69,10 +69,12 @@ view model =
 
 errorView : Model -> Html Msg
 errorView model =
-    if String.isEmpty model.error then
-        text ""
-    else
-        Html.code [] [ text ("Error --> " ++ model.error) ]
+    case model.error of
+        Just err ->
+            Html.code [] [ text ("Error --> " ++ err) ]
+
+        Nothing ->
+            Html.div [] []
 
 
 contentView : Model -> Html Msg
@@ -218,10 +220,10 @@ encodeStorage storage =
 
 
 updateAuth : { b | auth : a } -> { d | userAuth : c } -> { b | auth : Maybe c }
-updateAuth model aauth =
-    { model | auth = Just aauth.userAuth }
+updateAuth model authentication =
+    { model | auth = Just authentication.userAuth }
 
 
-updateError : { b | error : a } -> c -> { b | error : String }
+updateError : { b | error : a } -> c -> { b | error : Maybe String }
 updateError model err =
-    { model | error = toString err }
+    { model | error = Just (toString err) }
