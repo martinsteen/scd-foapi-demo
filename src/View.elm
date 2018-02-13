@@ -6,11 +6,9 @@ import Material.Scheme
 import Material.Button as Button exposing (..)
 import Material.Options as Options exposing (css)
 import Material.Chip as Chip
-import Material.Card as Card
 import Material.Color as Color
-import Material.Icon as Icon
-import Material.Card as Card
 import Material.Textfield as Textfield
+import Material.Elevation as Elevation
 import Msg exposing (..)
 import Model exposing (..)
 import Storage exposing (..)
@@ -81,28 +79,15 @@ contentView model =
 
 cardView : Model -> Html Msg
 cardView model =
-    Card.view
-        [ Color.background (Color.color Color.DeepOrange Color.S400)
-        , css "width" "100%"
+    Options.div
+        [ Elevation.e4
+        , css "float" "left"
+        , css "margin" "10%"
         ]
-        [ Card.title [ Card.border ] [ Card.subhead [ white ] [ text "Endpoints" ] ]
-        , Card.text [ white, css "text-align" "left" ]
-            [ renderEndpointChips model.storage.endpoints
-            , renderEndpointInput model
-            ]
-        , Card.actions
-            [ Card.border, css "vertical-align" "center", css "text-align" "right", white ]
-            [ Button.render Mdl
-                [ 8, 1 ]
-                model.mdl
-                [ Button.icon, Button.ripple ]
-                [ Icon.i "favorite_border" ]
-            , Button.render Mdl
-                [ 8, 2 ]
-                model.mdl
-                [ Button.icon, Button.ripple ]
-                [ Icon.i "event_available" ]
-            ]
+        [ Options.div [ Elevation.e0, css "margin" "10%" ] [ text "Endpoints" ]
+        , Options.div [ Elevation.e0, css "margin" "10%" ]
+            [ renderEndpointChips model.storage.endpoints ]
+        , renderEndpointInput model Nothing
         ]
 
 
@@ -120,38 +105,33 @@ renderEndpointChips endpoints =
         )
 
 
-renderEndpointInput : Model -> Html Msg
-renderEndpointInput model =
-    div []
-        [ Textfield.render Mdl
-            [ 1 ]
-            model.mdl
-            [ Textfield.label "Name"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            []
-        , Textfield.render Mdl
-            [ 2 ]
-            model.mdl
-            [ Textfield.label "Url"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            []
-        , Textfield.render Mdl
-            [ 3 ]
-            model.mdl
-            [ Textfield.label "SCD User"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            []
-        , Textfield.render Mdl
-            [ 4 ]
-            model.mdl
-            [ Textfield.label "SCD password"
-            , Textfield.floatingLabel
-            ]
-            []
+renderEndpointInput : Model -> Maybe Endpoint -> Html Msg
+renderEndpointInput model endpoint =
+    case endpoint of
+        Just ep ->
+            Options.div [ css "margin" "10%" ]
+                [ div [] [ renderInput model 1 "Name" ep.name ]
+                , div [] [ renderInput model 2 "Url" ep.url ]
+                , div [] [ renderInput model 3 "SCD User" ep.user ]
+                , div [] [ renderInput model 4 "SCD password" ep.password ]
+                ]
+
+        Nothing ->
+            Options.div [ css "margin" "10%" ]
+                [ div [] [ renderInput model 1 "Name" "" ]
+                , div [] [ renderInput model 2 "Url" "" ]
+                , div [] [ renderInput model 3 "SCD User" "" ]
+                , div [] [ renderInput model 4 "SCD password" "" ]
+                ]
+
+
+renderInput : Model -> Int -> String -> String -> Html Msg
+renderInput model id fieldName value =
+    Textfield.render Mdl
+        [ id ]
+        model.mdl
+        [ Textfield.label fieldName
+        , Textfield.floatingLabel
+        , Textfield.value value
         ]
+        []

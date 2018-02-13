@@ -34,8 +34,8 @@ initialModel location =
     , location = location
     , storage =
         { endpoints =
-            [ { name = "6.3/TESTDK2", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [] }
-            , { name = "Dev/FOART-P", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [] }
+            [ { name = "6.3/TESTDK2", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [], user = "MSIEXT", password = "MSIEXT" }
+            , { name = "Dev/FOART-P", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [], user = "MSIEXT", password = "MSIEXT" }
             ]
         }
     , mdl = Material.model

@@ -9,6 +9,8 @@ type alias Endpoint =
     { name : String
     , url : String
     , alerts : List Int
+    , user : String
+    , password : String
     }
 
 
@@ -28,6 +30,8 @@ endpointDecoder =
         |> required "name" Json.Decode.string
         |> required "url" Json.Decode.string
         |> required "alerts" (list Json.Decode.int)
+        |> required "user" Json.Decode.string
+        |> required "password" Json.Decode.string
 
 
 decodeStorage : String -> Result String Storage
@@ -41,6 +45,8 @@ endpointEncoder endpoint =
         [ ( "name", Json.Encode.string endpoint.name )
         , ( "url", Json.Encode.string endpoint.url )
         , ( "alerts", endpoint.alerts |> List.map (\ep -> Json.Encode.int ep) |> Json.Encode.list )
+        , ( "user", Json.Encode.string endpoint.url )
+        , ( "password", Json.Encode.string endpoint.url )
         ]
 
 
