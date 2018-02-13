@@ -13,6 +13,7 @@ import Material.Card as Card
 import Material.Textfield as Textfield
 import Msg exposing (..)
 import Model exposing (..)
+import Storage exposing (..)
 
 
 type alias Msg =
@@ -21,6 +22,10 @@ type alias Msg =
 
 type alias Model =
     Model.Model
+
+
+type alias Endpoint =
+    Storage.Endpoint
 
 
 white : Options.Property c m

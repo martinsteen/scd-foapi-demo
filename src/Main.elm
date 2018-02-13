@@ -23,6 +23,10 @@ type alias Storage =
     Storage.Storage
 
 
+type alias Endpoint =
+    Storage.Endpoint
+
+
 initialModel : Navigation.Location -> Model
 initialModel location =
     { auth = Nothing

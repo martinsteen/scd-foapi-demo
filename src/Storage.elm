@@ -1,4 +1,4 @@
-module Storage exposing (decodeStorage, encodeStorage)
+module Storage exposing (Storage, Endpoint, decodeStorage, encodeStorage)
 
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
