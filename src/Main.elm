@@ -2,15 +2,13 @@ module Main exposing (..)
 
 import Material
 import Navigation
-import Dropbox exposing (..)
+import Dropbox
 import Task
-import Date exposing (Date)
-import Json.Encode exposing (Value, object, string)
-import Json.Decode exposing (int, string, float, Decoder, list)
-import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
+import Date
 import Model exposing (..)
 import Msg exposing (..)
 import View exposing (..)
+import Storage exposing (..)
 
 
 type alias Msg =
@@ -19,6 +17,10 @@ type alias Msg =
 
 type alias Model =
     Model.Model
+
+
+type alias Storage =
+    Storage.Storage
 
 
 initialModel : Navigation.Location -> Model
@@ -55,14 +57,14 @@ update msg model =
             ( updateError model err, Cmd.none )
 
         FetchFileResponse (Ok content) ->
-            case decodeStorage content.content of
+            case Storage.decodeStorage content.content of
                 Ok endpoints ->
                     ( { model | storage = endpoints }, Cmd.none )
 
                 Err decodeErr ->
                     ( updateError model decodeErr, Cmd.none )
 
-        FetchFileResponse (Err (PathDownloadError err)) ->
+        FetchFileResponse (Err (Dropbox.PathDownloadError err)) ->
             case model.auth of
                 Just auth ->
                     ( model, uploadCmd auth model.storage )
@@ -88,10 +90,10 @@ main =
         }
 
 
-uploadCmd : UserAuth -> Storage -> Cmd Msg
+uploadCmd : Dropbox.UserAuth -> Storage -> Cmd Msg
 uploadCmd auth storage =
     storage
-        |> encodeStorage
+        |> Storage.encodeStorage
         |> createUploadReq
         |> Dropbox.upload auth
         |> Task.attempt PutFileReponse
@@ -101,7 +103,7 @@ createUploadReq : String -> Dropbox.UploadRequest
 createUploadReq content =
     Dropbox.UploadRequest
         "/endpoint-data.json"
-        Overwrite
+        Dropbox.Overwrite
         False
         (Just <| Date.fromTime 0)
         False
@@ -127,52 +129,6 @@ downloadCmd auth =
     Dropbox.download auth
         { path = "/endpoint-data.json" }
         |> Task.attempt FetchFileResponse
-
-
-storageDecoder : Decoder Storage
-storageDecoder =
-    decode Storage
-        |> required "endpoints" (list endpointDecoder)
-
-
-endpointDecoder : Decoder Endpoint
-endpointDecoder =
-    decode Endpoint
-        |> required "name" Json.Decode.string
-        |> required "url" Json.Decode.string
-        |> required "alerts" (list Json.Decode.int)
-
-
-decodeStorage : String -> Result String Storage
-decodeStorage =
-    Json.Decode.decodeString storageDecoder
-
-
-endpointEncoder : Endpoint -> Value
-endpointEncoder endpoint =
-    Json.Encode.object
-        [ ( "name", Json.Encode.string endpoint.name )
-        , ( "url", Json.Encode.string endpoint.url )
-        , ( "alerts", endpoint.alerts |> List.map (\ep -> Json.Encode.int ep) |> Json.Encode.list )
-        ]
-
-
-storageEncoder : Storage -> Value
-storageEncoder storage =
-    Json.Encode.object
-        [ ( "endpoints"
-          , storage.endpoints
-                |> List.map (\ep -> endpointEncoder ep)
-                |> Json.Encode.list
-          )
-        ]
-
-
-encodeStorage : Storage -> String
-encodeStorage storage =
-    storage
-        |> storageEncoder
-        |> Json.Encode.encode 2
 
 
 updateAuth : { b | auth : a } -> { d | userAuth : c } -> { b | auth : Maybe c }

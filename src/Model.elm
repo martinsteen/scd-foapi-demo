@@ -1,19 +1,13 @@
 module Model exposing (..)
 
 import Material
-import Dropbox exposing (..)
+import Dropbox
 import Navigation
-
-
-type alias Endpoint =
-    { name : String
-    , url : String
-    , alerts : List Int
-    }
+import Storage
 
 
 type alias Storage =
-    { endpoints : List Endpoint }
+    Storage.Storage
 
 
 type alias Model =
