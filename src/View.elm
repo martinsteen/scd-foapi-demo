@@ -87,7 +87,7 @@ cardView model =
         [ Options.div [ Elevation.e0, css "margin" "10%" ] [ text "Endpoints" ]
         , Options.div [ Elevation.e0, css "margin" "10%" ]
             [ renderEndpointChips model.storage.endpoints ]
-        , renderEndpointInput model Nothing
+        , renderEndpointInput model (List.head model.storage.endpoints)
         ]
 
 
@@ -112,7 +112,7 @@ renderEndpointInput model endpoint =
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput model 1 "Name" ep.name ]
                 , div [] [ renderInput model 2 "Url" ep.url ]
-                , div [] [ renderInput model 3 "SCD User" ep.user ]
+                , div [] [ renderInput model 3 "SCD ___User" ep.user ]
                 , div [] [ renderInput model 4 "SCD password" ep.password ]
                 ]
 

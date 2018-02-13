@@ -45,8 +45,8 @@ endpointEncoder endpoint =
         [ ( "name", Json.Encode.string endpoint.name )
         , ( "url", Json.Encode.string endpoint.url )
         , ( "alerts", endpoint.alerts |> List.map (\ep -> Json.Encode.int ep) |> Json.Encode.list )
-        , ( "user", Json.Encode.string endpoint.url )
-        , ( "password", Json.Encode.string endpoint.url )
+        , ( "user", Json.Encode.string endpoint.user )
+        , ( "password", Json.Encode.string endpoint.password )
         ]
 
 
