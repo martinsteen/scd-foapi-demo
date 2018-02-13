@@ -1,7 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h1, p, span)
-import Html.Attributes exposing (class, href, style)
+import Material
 import Navigation
 import Dropbox exposing (..)
 import Task
@@ -9,49 +8,17 @@ import Date exposing (Date)
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
-import Material
-import Material.Scheme
-import Material.Button as Button
-import Material.Options as Options exposing (css)
-import Material.Chip as Chip
-import Material.Card as Card
-import Material.Color as Color
-import Material.Icon as Icon
-import Material.Card as Card
-import Material.Textfield as Textfield
+import Model exposing (..)
+import Msg exposing (..)
+import View exposing (..)
 
 
-white : Options.Property c m
-white =
-    Color.text Color.white
-
-
-type Msg
-    = LogInToDropbox
-    | AuthResponse Dropbox.AuthorizeResult
-    | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
-    | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
-    | Mdl (Material.Msg Msg)
+type alias Msg =
+    Msg.Msg
 
 
 type alias Model =
-    { storage : Storage
-    , location : Navigation.Location
-    , auth : Maybe Dropbox.UserAuth
-    , error : Maybe String
-    , mdl : Material.Model
-    }
-
-
-type alias Endpoint =
-    { name : String
-    , url : String
-    , alerts : List Int
-    }
-
-
-type alias Storage =
-    { endpoints : List Endpoint }
+    Model.Model
 
 
 initialModel : Navigation.Location -> Model
@@ -67,135 +34,6 @@ initialModel location =
         }
     , mdl = Material.model
     }
-
-
-type alias Mdl =
-    Material.Model
-
-
-view : Model -> Html Msg
-view model =
-    div [ class "jumbotron" ]
-        [ h1 [] [ text "SimCorp Dimension front office API demo " ]
-        , (loginToDropBoxButton model)
-        , p []
-            [ contentView model
-            , errorView model
-            ]
-        ]
-        |> Material.Scheme.top
-
-
-errorView : Model -> Html Msg
-errorView model =
-    case model.error of
-        Just err ->
-            Html.code [] [ text ("Error --> " ++ err) ]
-
-        Nothing ->
-            Html.div [] []
-
-
-loginToDropBoxButton : Model -> Html Msg
-loginToDropBoxButton model =
-    case model.auth of
-        Nothing ->
-            Button.render Mdl
-                [ 0 ]
-                model.mdl
-                [ Options.onClick LogInToDropbox
-                , css "margin" "0 24px"
-                ]
-                [ text "Log in with Dropbox" ]
-
-        Just auth ->
-            text ""
-
-
-contentView : Model -> Html Msg
-contentView model =
-    if List.isEmpty model.storage.endpoints then
-        text ""
-    else
-        cardView model
-
-
-cardView : Model -> Html Msg
-cardView model =
-    Card.view
-        [ Color.background (Color.color Color.DeepOrange Color.S400)
-        , css "width" "100%"
-        ]
-        [ Card.title [ Card.border ] [ Card.subhead [ white ] [ text "Endpoints" ] ]
-        , Card.text [ white, css "text-align" "left" ]
-            [ renderEndpointChips model.storage.endpoints
-            , renderEndpointInput model
-            ]
-        , Card.actions
-            [ Card.border, css "vertical-align" "center", css "text-align" "right", white ]
-            [ Button.render Mdl
-                [ 8, 1 ]
-                model.mdl
-                [ Button.icon, Button.ripple ]
-                [ Icon.i "favorite_border" ]
-            , Button.render Mdl
-                [ 8, 2 ]
-                model.mdl
-                [ Button.icon, Button.ripple ]
-                [ Icon.i "event_available" ]
-            ]
-        ]
-
-
-renderEndpointChips : List Endpoint -> Html Msg
-renderEndpointChips endpoints =
-    span []
-        (List.map
-            (\endpoint ->
-                Chip.span
-                    [ Chip.deleteIcon "cancel", css "margin" "12px" ]
-                    [ Chip.content [] [ text endpoint.name ]
-                    ]
-            )
-            endpoints
-        )
-
-
-renderEndpointInput : Model -> Html Msg
-renderEndpointInput model =
-    div []
-        [ Textfield.render Mdl
-            [ 1 ]
-            model.mdl
-            [ Textfield.label "Name"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            []
-        , Textfield.render Mdl
-            [ 2 ]
-            model.mdl
-            [ Textfield.label "Url"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            [ "https://dk01ws1672.scdom.net:44320/odata" ]
-        , Textfield.render Mdl
-            [ 3 ]
-            model.mdl
-            [ Textfield.label "SCD User"
-            , Textfield.floatingLabel
-            , Textfield.text_
-            ]
-            []
-        , Textfield.render Mdl
-            [ 4 ]
-            model.mdl
-            [ Textfield.label "SCD password"
-            , Textfield.floatingLabel
-            ]
-            []
-        ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -284,7 +122,7 @@ authorizeCmd location =
         location
 
 
-downloadCmd : Dropbox.UserAuth -> Cmd Msg
+downloadCmd : Dropbox.UserAuth -> Cmd Msg.Msg
 downloadCmd auth =
     Dropbox.download auth
         { path = "/endpoint-data.json" }
