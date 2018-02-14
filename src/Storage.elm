@@ -1,32 +1,28 @@
-module Storage exposing (Storage, Endpoint, decodeStorage, encodeStorage)
+module Storage exposing (decodeStorage, encodeStorage)
 
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
+import Model
 
 
 type alias Endpoint =
-    { name : String
-    , url : String
-    , alerts : List Int
-    , user : String
-    , password : String
-    }
+    Model.Endpoint
 
 
 type alias Storage =
-    { endpoints : List Endpoint }
+    Model.Storage
 
 
 storageDecoder : Decoder Storage
 storageDecoder =
-    decode Storage
+    decode Model.Storage
         |> required "endpoints" (list endpointDecoder)
 
 
 endpointDecoder : Decoder Endpoint
 endpointDecoder =
-    decode Endpoint
+    decode Model.Endpoint
         |> required "name" Json.Decode.string
         |> required "url" Json.Decode.string
         |> required "alerts" (list Json.Decode.int)

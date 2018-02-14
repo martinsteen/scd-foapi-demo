@@ -2,16 +2,15 @@ module View exposing (..)
 
 import Html exposing (Html, text, div, h1, p, span)
 import Html.Attributes exposing (class, href, style)
+import Material
 import Material.Scheme
-import Material.Button as Button exposing (..)
-import Material.Options as Options exposing (css)
+import Material.Button as Button
+import Material.Options as Options exposing (css, cs)
 import Material.Chip as Chip
 import Material.Color as Color
 import Material.Textfield as Textfield
-import Material.Elevation as Elevation
 import Msg exposing (..)
 import Model exposing (..)
-import Storage exposing (..)
 
 
 type alias Msg =
@@ -23,7 +22,11 @@ type alias Model =
 
 
 type alias Endpoint =
-    Storage.Endpoint
+    Model.Endpoint
+
+
+type alias Mdl =
+    Material.Model
 
 
 white : Options.Property c m
@@ -79,15 +82,11 @@ contentView model =
 
 cardView : Model -> Html Msg
 cardView model =
-    Options.div
-        [ Elevation.e4
-        , css "float" "left"
-        , css "margin" "10%"
-        ]
-        [ Options.div [ Elevation.e0, css "margin" "10%" ] [ text "Endpoints" ]
-        , Options.div [ Elevation.e0, css "margin" "10%" ]
+    span []
+        [ span []
             [ renderEndpointChips model.storage.endpoints ]
-        , renderEndpointInput model (List.head model.storage.endpoints)
+        , span []
+            [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
         ]
 
 
@@ -97,39 +96,38 @@ renderEndpointChips endpoints =
         (List.map
             (\endpoint ->
                 Chip.span
-                    [ Chip.deleteIcon "cancel", css "margin" "12px" ]
-                    [ Chip.content [] [ text endpoint.name ]
+                    [ Options.css "margin" "5px 5px"
+                    , Options.onClick (EditEndpoint endpoint)
+                    , Chip.deleteClick (EditEndpoint endpoint)
+                    ]
+                    [ Chip.content []
+                        [ text endpoint.name ]
                     ]
             )
             endpoints
         )
 
 
-renderEndpointInput : Model -> Maybe Endpoint -> Html Msg
-renderEndpointInput model endpoint =
+renderEndpointInput : Mdl -> Maybe Endpoint -> Html Msg
+renderEndpointInput mdl endpoint =
     case endpoint of
         Just ep ->
             Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput model 1 "Name" ep.name ]
-                , div [] [ renderInput model 2 "Url" ep.url ]
-                , div [] [ renderInput model 3 "SCD ___User" ep.user ]
-                , div [] [ renderInput model 4 "SCD password" ep.password ]
+                [ div [] [ renderInput mdl 1 "Name" ep.name ]
+                , div [] [ renderInput mdl 2 "Url" ep.url ]
+                , div [] [ renderInput mdl 3 "SCD User" ep.user ]
+                , div [] [ renderInput mdl 4 "SCD password" ep.password ]
                 ]
 
         Nothing ->
-            Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput model 1 "Name" "" ]
-                , div [] [ renderInput model 2 "Url" "" ]
-                , div [] [ renderInput model 3 "SCD User" "" ]
-                , div [] [ renderInput model 4 "SCD password" "" ]
-                ]
+            text ""
 
 
-renderInput : Model -> Int -> String -> String -> Html Msg
-renderInput model id fieldName value =
+renderInput : Mdl -> Int -> String -> String -> Html Msg
+renderInput mdl id fieldName value =
     Textfield.render Mdl
         [ id ]
-        model.mdl
+        mdl
         [ Textfield.label fieldName
         , Textfield.floatingLabel
         , Textfield.value value

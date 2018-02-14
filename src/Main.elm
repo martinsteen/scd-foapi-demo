@@ -19,12 +19,12 @@ type alias Model =
     Model.Model
 
 
-type alias Storage =
-    Storage.Storage
-
-
 type alias Endpoint =
-    Storage.Endpoint
+    Model.Endpoint
+
+
+type alias Storage =
+    Model.Storage
 
 
 initialModel : Navigation.Location -> Model
@@ -39,6 +39,7 @@ initialModel location =
             ]
         }
     , mdl = Material.model
+    , endpointUnderConstruction = Nothing
     }
 
 
@@ -81,6 +82,16 @@ update msg model =
 
         Mdl msg_ ->
             Material.update Mdl msg_ model
+
+        EditEndpoint endpoint ->
+            ( { model | endpointUnderConstruction = Just endpoint }, Cmd.none )
+
+        RemoveEndpoint endpoint ->
+            ( updateError model endpoint.name, Cmd.none )
+
+
+
+-- ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
 
 main : Program Never Model (Dropbox.Msg Msg)
