@@ -8,6 +8,7 @@ import Material.Button as Button
 import Material.Options as Options exposing (css, cs)
 import Material.Chip as Chip
 import Material.Color as Color
+import Material.Icon as Icon
 import Material.Textfield as Textfield
 import Msg exposing (..)
 import Model exposing (..)
@@ -85,6 +86,7 @@ cardView model =
     span []
         [ span []
             [ renderEndpointChips model.storage.endpoints ]
+        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick LogInToDropbox ] [ Icon.i "add" ]
         , span []
             [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
         ]
@@ -114,12 +116,10 @@ renderEndpointInput mdl endpoint =
     case endpoint of
         Just ep ->
             Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput mdl 1 "Name" ep.name ]
-                , div [] [ renderInput mdl 2 "Url" ep.url ]
-                , div [] [ renderInput mdl 3 "SCD User" ep.user ]
-                , div [] [ renderInput mdl 4 "SCD password" ep.password ]
+                [ div [] [ renderInput mdl 1 "Name" ep.name, renderInput mdl 2 "Url" ep.url ]
+                , div [] [ renderInput mdl 3 "User" ep.user,  renderInput mdl 4 "Password" ep.password ]
+                , div [] [ Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick (SaveEndpoint ep) ] [ Icon.i "ok" ] ]
                 ]
-
         Nothing ->
             text ""
 

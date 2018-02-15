@@ -89,7 +89,22 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
+        SaveEndpoint endpoint ->
+            case model.auth of
+                Just auth ->
+                    ( { model | storage = replanceEndpointInStorage model.storage endpoint  }, Cmd.none)
+                Nothing ->
+                    ( updateError model "You have to login to dropbox first", Cmd.none )
 
+replanceEndpointInStorage: Storage -> Endpoint -> Storage
+replanceEndpointInStorage  storage endpoint = 
+    { storage | endpoints = replaceEndpointInList endpoint storage.endpoints }
+
+replaceEndpointInList: Endpoint -> List Endpoint -> List Endpoint
+replaceEndpointInList endpoint endpoints =
+        let (a,b) =
+            List.partition (\x->x.name == endpoint.name) endpoints
+        in  endpoint :: a
 
 -- ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
