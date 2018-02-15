@@ -92,21 +92,51 @@ update msg model =
         SaveEndpoint endpoint ->
             case model.auth of
                 Just auth ->
-                    ( { model | storage = replanceEndpointInStorage model.storage endpoint  }, Cmd.none)
+                    ( { model | storage = replanceEndpointInStorage model.storage endpoint }, Cmd.none )
+
                 Nothing ->
                     ( updateError model "You have to login to dropbox first", Cmd.none )
 
-replanceEndpointInStorage: Storage -> Endpoint -> Storage
-replanceEndpointInStorage  storage endpoint = 
+        UpdateEndpoinUnderConstruction ( field, value ) ->
+            case model.endpointUnderConstruction of
+                Just ep ->
+                    ( { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }, Cmd.none )
+
+                Nothing ->
+                    ( model, Cmd.none )
+
+        CancelEdit ->
+            ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
+
+
+updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Maybe Endpoint
+updateFieldInModelUnderConstruction endpoint field value =
+    case field of
+        Name ->
+            Just { endpoint | name = value }
+
+        Url ->
+            Just { endpoint | url = value }
+
+        Password ->
+            Just { endpoint | password = value }
+
+        User ->
+            Just { endpoint | user = value }
+
+
+replanceEndpointInStorage : Storage -> Endpoint -> Storage
+replanceEndpointInStorage storage endpoint =
     { storage | endpoints = replaceEndpointInList endpoint storage.endpoints }
 
-replaceEndpointInList: Endpoint -> List Endpoint -> List Endpoint
-replaceEndpointInList endpoint endpoints =
-        let (a,b) =
-            List.partition (\x->x.name == endpoint.name) endpoints
-        in  endpoint :: a
 
--- ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
+replaceEndpointInList : Endpoint -> List Endpoint -> List Endpoint
+replaceEndpointInList endpoint endpoints =
+    let
+        ( different, same ) =
+            List.partition (\x -> x.name == endpoint.name) endpoints
+    in
+        endpoint :: different
 
 
 main : Program Never Model (Dropbox.Msg Msg)

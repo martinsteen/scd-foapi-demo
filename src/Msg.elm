@@ -9,6 +9,13 @@ type alias Endpoint =
     Model.Endpoint
 
 
+type Field
+    = Name
+    | User
+    | Url
+    | Password
+
+
 type Msg
     = LogInToDropbox
     | AuthResponse Dropbox.AuthorizeResult
@@ -16,5 +23,7 @@ type Msg
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
     | Mdl (Material.Msg Msg)
     | EditEndpoint Endpoint
+    | CancelEdit
     | RemoveEndpoint Endpoint
     | SaveEndpoint Endpoint
+    | UpdateEndpoinUnderConstruction ( Field, String )

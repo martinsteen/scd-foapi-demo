@@ -1,7 +1,6 @@
 module View exposing (..)
 
-import Html exposing (Html, text, div, h1, p, span)
-import Html.Attributes exposing (class, href, style)
+import Html exposing (Html, text, div, h2, p, span)
 import Material
 import Material.Scheme
 import Material.Button as Button
@@ -62,13 +61,11 @@ loginToDropBoxButton model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "jumbotron" ]
-        [ h1 [] [ text "SimCorp Dimension front office API demo " ]
-        , (loginToDropBoxButton model)
-        , p []
-            [ contentView model
-            , errorView model
-            ]
+    div []
+        [ h2 [] [ text "SimCorp Dimension front office API demo " ]
+        , loginToDropBoxButton model
+        , contentView model
+        , errorView model
         ]
         |> Material.Scheme.top
 
@@ -101,7 +98,7 @@ renderEndpointChips endpoints =
                     [ Options.css "margin" "5px 5px"
                     , Options.onClick (EditEndpoint endpoint)
                     , Chip.deleteIcon "cancel"
-                    , Chip.deleteClick (EditEndpoint endpoint)
+                    , Chip.deleteClick CancelEdit
                     ]
                     [ Chip.content []
                         [ text endpoint.name ]
@@ -116,21 +113,23 @@ renderEndpointInput mdl endpoint =
     case endpoint of
         Just ep ->
             Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput mdl 1 "Name" ep.name, renderInput mdl 2 "Url" ep.url ]
-                , div [] [ renderInput mdl 3 "User" ep.user,  renderInput mdl 4 "Password" ep.password ]
+                [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
+                , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
                 , div [] [ Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick (SaveEndpoint ep) ] [ Icon.i "ok" ] ]
                 ]
+
         Nothing ->
             text ""
 
 
-renderInput : Mdl -> Int -> String -> String -> Html Msg
-renderInput mdl id fieldName value =
+renderInput : Mdl -> Int -> Field -> String -> Html Msg
+renderInput mdl id field value =
     Textfield.render Mdl
         [ id ]
         mdl
-        [ Textfield.label fieldName
+        [ Textfield.label (toString field)
         , Textfield.floatingLabel
         , Textfield.value value
+        , Options.onInput (\x -> UpdateEndpoinUnderConstruction ( field, x ))
         ]
         []
