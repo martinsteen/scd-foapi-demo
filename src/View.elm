@@ -98,6 +98,7 @@ renderEndpointChips endpoints =
                 Chip.span
                     [ Options.css "margin" "5px 5px"
                     , Options.onClick (EditEndpoint endpoint)
+                    , Chip.deleteIcon "cancel"
                     , Chip.deleteClick (EditEndpoint endpoint)
                     ]
                     [ Chip.content []
