@@ -117,10 +117,8 @@ renderEndpointInput mdl endpoint =
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput mdl 1 "Name" ep.name, renderInput mdl 2 "Url" ep.url ]
                 , div [] [ renderInput mdl 3 "User" ep.user,  renderInput mdl 4 "Password" ep.password ]
-                , div [] [ Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick LogInToDropbox ] [ Icon.i "ok" ]
-                 ]
+                , div [] [ Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick (SaveEndpoint ep) ] [ Icon.i "ok" ] ]
                 ]
-
         Nothing ->
             text ""
 
