@@ -22,8 +22,8 @@ type Msg
     | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
     | Mdl (Material.Msg Msg)
-    | EditEndpoint Endpoint
-    | CancelEdit
+    | StartEndpointEditor (Maybe Endpoint)
+    | CancelEndpointEditor
     | RemoveEndpoint Endpoint
     | SaveEndpoint Endpoint
-    | UpdateEndpoinUnderConstruction ( Field, String )
+    | UpdateEndportEditor ( Field, String )

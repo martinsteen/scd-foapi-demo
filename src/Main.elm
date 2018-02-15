@@ -42,6 +42,9 @@ initialModel location =
     , endpointUnderConstruction = Nothing
     }
 
+defaultEndpoint : Endpoint
+defaultEndpoint =
+    { name = "", url = "https://xxx/odata", alerts = [], user = "", password = "" }
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -83,8 +86,12 @@ update msg model =
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
-        EditEndpoint endpoint ->
-            ( { model | endpointUnderConstruction = Just endpoint }, Cmd.none )
+        StartEndpointEditor endpoint ->
+            case endpoint of
+                Just ep ->
+                    ( { model | endpointUnderConstruction = Just ep }, Cmd.none )
+                Nothing ->
+                    ( { model | endpointUnderConstruction = Just defaultEndpoint }, Cmd.none )
 
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
@@ -92,20 +99,26 @@ update msg model =
         SaveEndpoint endpoint ->
             case model.auth of
                 Just auth ->
-                    ( { model | storage = replanceEndpointInStorage model.storage endpoint }, Cmd.none )
+                    let model_ =
+                        { model | storage = replanceEndpointInStorage model.storage endpoint }
+                    in 
+                        ( { model_ | endpointUnderConstruction = Nothing } , uploadCmd auth model_.storage )
 
                 Nothing ->
                     ( updateError model "You have to login to dropbox first", Cmd.none )
 
-        UpdateEndpoinUnderConstruction ( field, value ) ->
+        UpdateEndportEditor ( field, value ) ->
             case model.endpointUnderConstruction of
                 Just ep ->
-                    ( { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }, Cmd.none )
+                    let model_ =
+                        { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }
+                    in 
+                        ( model_, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
 
-        CancelEdit ->
+        CancelEndpointEditor ->
             ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
 
@@ -133,7 +146,7 @@ replanceEndpointInStorage storage endpoint =
 replaceEndpointInList : Endpoint -> List Endpoint -> List Endpoint
 replaceEndpointInList endpoint endpoints =
     let
-        ( different, same ) =
+        ( same, different ) =
             List.partition (\x -> x.name == endpoint.name) endpoints
     in
         endpoint :: different

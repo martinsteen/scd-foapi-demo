@@ -83,7 +83,7 @@ cardView model =
     span []
         [ span []
             [ renderEndpointChips model.storage.endpoints ]
-        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick LogInToDropbox ] [ Icon.i "add" ]
+        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (StartEndpointEditor Nothing) ] [ Icon.i "add" ]
         , span []
             [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
         ]
@@ -96,9 +96,9 @@ renderEndpointChips endpoints =
             (\endpoint ->
                 Chip.span
                     [ Options.css "margin" "5px 5px"
-                    , Options.onClick (EditEndpoint endpoint)
-                    , Chip.deleteIcon "cancel"
-                    , Chip.deleteClick CancelEdit
+                    , Options.onClick (StartEndpointEditor (Just endpoint))
+                    , Chip.deleteIcon "clear"
+                    , Chip.deleteClick (RemoveEndpoint endpoint)
                     ]
                     [ Chip.content []
                         [ text endpoint.name ]
@@ -115,12 +115,15 @@ renderEndpointInput mdl endpoint =
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
                 , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-                , div [] [ Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick (SaveEndpoint ep) ] [ Icon.i "ok" ] ]
+                , div [] [ renderButton mdl ep "done" (SaveEndpoint ep),  renderButton mdl ep "clear" CancelEndpointEditor]
                 ]
 
         Nothing ->
             text ""
 
+renderButton : Mdl -> Endpoint -> String -> Msg -> Html Msg
+renderButton mdl ep icon onClick =
+    Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick onClick ] [ Icon.i icon ]
 
 renderInput : Mdl -> Int -> Field -> String -> Html Msg
 renderInput mdl id field value =
@@ -130,6 +133,6 @@ renderInput mdl id field value =
         [ Textfield.label (toString field)
         , Textfield.floatingLabel
         , Textfield.value value
-        , Options.onInput (\x -> UpdateEndpoinUnderConstruction ( field, x ))
+        , Options.onInput (\value -> UpdateEndportEditor ( field, value ))
         ]
         []
