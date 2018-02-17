@@ -3,13 +3,11 @@ module Main exposing (..)
 import Material
 import Navigation
 import Dropbox
-import Task
-import Date
 import Model exposing (..)
 import Msg exposing (..)
 import View exposing (..)
 import Storage exposing (..)
-import EndpointEditor exposing (updateFieldInModelUnderConstruction, updateEndpointEditor)
+import EndpointEditor exposing (updateEndpointEditor)
 
 
 type alias Msg =
@@ -34,8 +32,7 @@ initialModel location =
     , error = Nothing
     , location = location
     , storage =
-        { endpoints = []
-        }
+        { endpoints = [] }
     , mdl = Material.model
     , endpointUnderConstruction = Nothing
     , defaultEndpoint = defaultEndpoint
@@ -90,8 +87,8 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
-        EndpointEditor endpointMessage ->
-            updateEndpointEditor endpointMessage model
+        EndpointEditor editorMessage ->
+            updateEndpointEditor editorMessage model
 
 
 main : Program Never Model (Dropbox.Msg Msg)

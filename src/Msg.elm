@@ -17,10 +17,10 @@ type Field
 
 
 type EndpointEditorMsg
-    = CancelEndpointEditor
-    | CommitEndpointEditor Endpoint
-    | UpdateEndpointEditor ( Field, String )
-    | StartEndpointEditor (Maybe Endpoint)
+    = Cancel
+    | Commit Endpoint
+    | Update ( Field, String )
+    | Start (Maybe Endpoint)
 
 
 type Msg

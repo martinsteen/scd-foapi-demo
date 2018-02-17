@@ -83,7 +83,7 @@ cardView model =
     span []
         [ span []
             [ renderEndpointChips model.storage.endpoints ]
-        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (EndpointEditor (StartEndpointEditor Nothing)) ] [ Icon.i "add" ]
+        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (EndpointEditor (Start Nothing)) ] [ Icon.i "add" ]
         , span []
             [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
         ]
@@ -96,7 +96,7 @@ renderEndpointChips endpoints =
             (\endpoint ->
                 Chip.span
                     [ Options.css "margin" "5px 5px"
-                    , Options.onClick (EndpointEditor (StartEndpointEditor (Just endpoint)))
+                    , Options.onClick (EndpointEditor (Start (Just endpoint)))
                     , Chip.deleteIcon "clear"
                     , Chip.deleteClick (RemoveEndpoint endpoint)
                     ]

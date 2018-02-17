@@ -1,4 +1,4 @@
-module EndpointEditor exposing (..)
+module EndpointEditor exposing (updateEndpointEditor, renderEndpointInput)
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -31,7 +31,7 @@ type alias Mdl =
 updateEndpointEditor : EndpointEditorMsg -> Model -> ( Model, Cmd Msg )
 updateEndpointEditor msg model =
     case msg of
-        StartEndpointEditor endpoint ->
+        Start endpoint ->
             case endpoint of
                 Just ep ->
                     ( { model | endpointUnderConstruction = Just ep }, Cmd.none )
@@ -39,10 +39,10 @@ updateEndpointEditor msg model =
                 Nothing ->
                     ( { model | endpointUnderConstruction = Just model.defaultEndpoint }, Cmd.none )
 
-        CancelEndpointEditor ->
+        Cancel ->
             ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
-        CommitEndpointEditor endpoint ->
+        Commit endpoint ->
             if (endpoint.name == "") then
                 ( model, Cmd.none )
             else
@@ -52,7 +52,7 @@ updateEndpointEditor msg model =
                 in
                     ( { model_ | endpointUnderConstruction = Nothing }, msg_ )
 
-        UpdateEndpointEditor ( field, value ) ->
+        Update ( field, value ) ->
             case model.endpointUnderConstruction of
                 Just ep ->
                     let
@@ -126,7 +126,7 @@ renderEndpointInput mdl endpoint =
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
                 , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-                , div [] [ renderButton mdl ep "done" (EndpointEditor (CommitEndpointEditor ep)), renderButton mdl ep "clear" (EndpointEditor CancelEndpointEditor) ]
+                , div [] [ renderButton mdl ep "done" (EndpointEditor (Commit ep)), renderButton mdl ep "clear" (EndpointEditor Cancel) ]
                 ]
 
         Nothing ->
@@ -146,6 +146,6 @@ renderInput mdl id field value =
         [ Textfield.label (toString field)
         , Textfield.floatingLabel
         , Textfield.value value
-        , Options.onInput (\value -> EndpointEditor (UpdateEndpointEditor ( field, value )))
+        , Options.onInput (\value -> EndpointEditor (Update ( field, value )))
         ]
         []
