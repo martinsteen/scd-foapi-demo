@@ -25,5 +25,5 @@ type Msg
     | StartEndpointEditor (Maybe Endpoint)
     | CancelEndpointEditor
     | RemoveEndpoint Endpoint
-    | SaveEndpoint Endpoint
-    | UpdateEndportEditor ( Field, String )
+    | CommitEndpointEditor Endpoint
+    | UpdateEndpointEditor ( Field, String )

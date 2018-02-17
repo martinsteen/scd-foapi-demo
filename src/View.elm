@@ -115,7 +115,7 @@ renderEndpointInput mdl endpoint =
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
                 , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-                , div [] [ renderButton mdl ep "done" (SaveEndpoint ep),  renderButton mdl ep "clear" CancelEndpointEditor]
+                , div [] [ renderButton mdl ep "done" (CommitEndpointEditor ep),  renderButton mdl ep "clear" CancelEndpointEditor]
                 ]
 
         Nothing ->
@@ -133,6 +133,6 @@ renderInput mdl id field value =
         [ Textfield.label (toString field)
         , Textfield.floatingLabel
         , Textfield.value value
-        , Options.onInput (\value -> UpdateEndportEditor ( field, value ))
+        , Options.onInput (\value -> UpdateEndpointEditor ( field, value ))
         ]
         []

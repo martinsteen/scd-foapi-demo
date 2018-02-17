@@ -33,18 +33,17 @@ initialModel location =
     , error = Nothing
     , location = location
     , storage =
-        { endpoints =
-            [ { name = "6.3/TESTDK2", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [], user = "MSIEXT", password = "MSIEXT" }
-            , { name = "Dev/FOART-P", url = "https://dk01ws1672.scdom.net:44320/odata", alerts = [], user = "MSIEXT", password = "MSIEXT" }
-            ]
+        { endpoints = []
         }
     , mdl = Material.model
     , endpointUnderConstruction = Nothing
     }
 
+
 defaultEndpoint : Endpoint
 defaultEndpoint =
     { name = "", url = "https://xxx/odata", alerts = [], user = "", password = "" }
+
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -86,40 +85,60 @@ update msg model =
         Mdl msg_ ->
             Material.update Mdl msg_ model
 
+        RemoveEndpoint endpoint ->
+            ( updateError model endpoint.name, Cmd.none )
+
         StartEndpointEditor endpoint ->
             case endpoint of
                 Just ep ->
                     ( { model | endpointUnderConstruction = Just ep }, Cmd.none )
+
                 Nothing ->
                     ( { model | endpointUnderConstruction = Just defaultEndpoint }, Cmd.none )
 
-        RemoveEndpoint endpoint ->
-            ( updateError model endpoint.name, Cmd.none )
+        CancelEndpointEditor ->
+            ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
-        SaveEndpoint endpoint ->
-            case model.auth of
-                Just auth ->
-                    let model_ =
-                        { model | storage = replanceEndpointInStorage model.storage endpoint }
-                    in 
-                        ( { model_ | endpointUnderConstruction = Nothing } , uploadCmd auth model_.storage )
+        CommitEndpointEditor endpoint ->
+            if (endpoint.name == "") then
+                ( model, Cmd.none )
+            else
+                let
+                    ( model_, msg_ ) =
+                        ( replaceEndpointInStorage model endpoint, updloadIfConnected model )
+                in
+                    ( { model_ | endpointUnderConstruction = Nothing }, msg_ )
 
-                Nothing ->
-                    ( updateError model "You have to login to dropbox first", Cmd.none )
-
-        UpdateEndportEditor ( field, value ) ->
+        UpdateEndpointEditor ( field, value ) ->
             case model.endpointUnderConstruction of
                 Just ep ->
-                    let model_ =
-                        { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }
-                    in 
+                    let
+                        model_ =
+                            { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }
+                    in
                         ( model_, Cmd.none )
 
                 Nothing ->
                     ( model, Cmd.none )
 
-        CancelEndpointEditor ->
-            ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
+
+updloadIfConnected : { a | auth : Maybe Dropbox.UserAuth, storage : Storage } -> Cmd Msg
+updloadIfConnected model =
+    case model.auth of
+        Just auth ->
+            uploadCmd auth model.storage
+
+        Nothing ->
+            Cmd.none
+
+
+replaceEndpointInStorage : { a | storage : Storage } -> Endpoint -> { a | storage : Storage }
+replaceEndpointInStorage model endpoint =
+    let
+        model_ =
+            { model | storage = replanceEndpointInStorage model.storage endpoint }
+    in
+        model_
 
 
 updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Maybe Endpoint
@@ -149,7 +168,12 @@ replaceEndpointInList endpoint endpoints =
         ( same, different ) =
             List.partition (\x -> x.name == endpoint.name) endpoints
     in
-        endpoint :: different
+        List.sortWith compareEnpoint (endpoint :: different)
+
+
+compareEnpoint : Endpoint -> Endpoint -> Order
+compareEnpoint ep1 ep2 =
+    compare ep1.name ep2.name
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -209,6 +233,6 @@ updateAuth model authentication =
     { model | auth = Just authentication.userAuth }
 
 
-updateError : { b | error : a } -> c -> { b | error : Maybe String }
+updateError : Model -> c -> Model
 updateError model err =
     { model | error = Just (toString err) }
