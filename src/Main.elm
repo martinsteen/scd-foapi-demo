@@ -8,22 +8,19 @@ import Msg exposing (..)
 import View exposing (..)
 import Storage exposing (..)
 import EndpointEditor
-
+import Task
 
 type alias Msg =
     Msg.Msg
 
-
 type alias Model =
     Model.Model
-
 
 type alias Endpoint =
     Model.Endpoint
 
-
 type alias Storage =
-    Model.Storage
+    Storage.Storage
 
 
 initialModel : Navigation.Location -> Model
@@ -53,7 +50,7 @@ update msg model =
             ( model, Cmd.none )
 
         AuthResponse (Dropbox.AuthorizeOk auth) ->
-            ( updateAuth model auth, downloadCmd auth.userAuth )
+            ( updateAuth model auth, downloadCmd auth.userAuth |> Task.attempt FetchFileResponse )
 
         AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
             ( updateError model err, Cmd.none )
@@ -72,7 +69,7 @@ update msg model =
         FetchFileResponse (Err (Dropbox.PathDownloadError err)) ->
             case model.auth of
                 Just auth ->
-                    ( model, uploadCmd auth model.storage )
+                    ( model, uploadCmd auth model.storage  |> Task.attempt PutFileReponse )
 
                 Nothing ->
                     ( updateError model err, Cmd.none )
@@ -120,7 +117,7 @@ updloadIfConnected : Model -> Cmd Msg
 updloadIfConnected model =
     case model.auth of
         Just auth ->
-            uploadCmd auth model.storage
+            uploadCmd auth model.storage |> Task.attempt PutFileReponse
 
         Nothing ->
             Cmd.none

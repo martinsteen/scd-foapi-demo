@@ -6,20 +6,19 @@ import Material.Button as Button
 import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
-import Model exposing (..)
+import Model exposing (Model, EndpointEditorModel)
+import Endpoint
 import Msg exposing (..)
 
 
 type alias Msg =
     Msg.Msg
 
-
 type alias Model =
     Model.Model
 
-
 type alias Endpoint =
-    Model.Endpoint
+    Endpoint.Endpoint
 
 type alias Mdl =
     Material.Model

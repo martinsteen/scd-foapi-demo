@@ -4,13 +4,14 @@ import Material
 import Dropbox
 import Navigation
 import Endpoint
-
-type alias Storage =
-    { endpoints : List Endpoint }
+import Storage exposing (Storage)
 
 type alias Endpoint =
     Endpoint.Endpoint
-    
+
+type alias Storage =
+    Storage.Storage
+
 type alias Model =
     { storage : Storage
     , location : Navigation.Location
