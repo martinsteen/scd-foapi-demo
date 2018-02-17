@@ -86,11 +86,14 @@ cardView model =
             [ renderEndpointChips model.storage.endpoints ]
         , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick StartAdd ] [ Icon.i "add" ]
         , span []
-            ( case model.editor of
-                Nothing -> []
+            (case model.editor of
+                Nothing ->
+                    []
+
                 Just editor ->
                     [ EndpointEditor.render model.mdl editor ]
-            )]
+            )
+        ]
 
 
 renderEndpointChips : List Endpoint -> Html Msg

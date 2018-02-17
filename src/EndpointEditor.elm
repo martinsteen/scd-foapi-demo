@@ -1,4 +1,4 @@
-module EndpointEditor exposing (Model, forCreate, forModify, update, render )
+module EndpointEditor exposing (Model, forCreate, forModify, update, render)
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -6,9 +6,9 @@ import Material.Button as Button
 import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
-
 import Endpoint
 import Msg exposing (..)
+
 
 type alias Model =
     { endpoint : Endpoint
@@ -19,18 +19,22 @@ type alias Model =
 type alias Msg =
     Msg.Msg
 
+
 type alias Endpoint =
     Endpoint.Endpoint
+
 
 type alias Mdl =
     Material.Model
 
-forCreate : Endpoint -> Model 
-forCreate ep = 
+
+forCreate : Endpoint -> Model
+forCreate ep =
     Model ep Nothing
 
-forModify : Endpoint -> String -> Model 
-forModify ep id = 
+
+forModify : Endpoint -> String -> Model
+forModify ep id =
     Model ep (Just id)
 
 
@@ -46,18 +50,21 @@ updateEditor endpoint field value =
             { endpoint | name = value }
 
         Url ->
-             { endpoint | url = value }
+            { endpoint | url = value }
 
         Password ->
-             { endpoint | password = value }
+            { endpoint | password = value }
 
         User ->
-             { endpoint | user = value }
+            { endpoint | user = value }
 
 
 render : Mdl -> Model -> Html Msg
 render mdl model =
-    let (ep,id) = (model.endpoint, model.id) in  
+    let
+        ( ep, id ) =
+            ( model.endpoint, model.id )
+    in
         Options.div [ css "margin" "10%" ]
             [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
             , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]

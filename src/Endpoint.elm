@@ -1,5 +1,6 @@
 module Endpoint exposing (..)
 
+
 type alias Endpoint =
     { name : String
     , url : String
@@ -7,4 +8,3 @@ type alias Endpoint =
     , user : String
     , password : String
     }
-

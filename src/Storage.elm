@@ -8,8 +8,10 @@ import Task
 import Date
 import Endpoint
 
+
 type alias Endpoint =
     Endpoint.Endpoint
+
 
 type alias Storage =
     { endpoints : List Endpoint }
@@ -19,6 +21,7 @@ downloadCmd : Dropbox.UserAuth -> Task.Task Dropbox.DownloadError Dropbox.Downlo
 downloadCmd auth =
     Dropbox.download auth
         { path = "/endpoint-data.json" }
+
 
 uploadCmd : Dropbox.UserAuth -> Storage -> Task.Task Dropbox.UploadError Dropbox.UploadResponse
 uploadCmd auth storage =

@@ -11,14 +11,18 @@ import EndpointEditor
 import Task
 import Endpoint
 
+
 type alias Msg =
     Msg.Msg
+
 
 type alias Model =
     Model.Model
 
+
 type alias Endpoint =
     Endpoint.Endpoint
+
 
 type alias Storage =
     Storage.Storage
@@ -70,7 +74,7 @@ update msg model =
         FetchFileResponse (Err (Dropbox.PathDownloadError err)) ->
             case model.auth of
                 Just auth ->
-                    ( model, uploadCmd auth model.storage  |> Task.attempt PutFileReponse )
+                    ( model, uploadCmd auth model.storage |> Task.attempt PutFileReponse )
 
                 Nothing ->
                     ( updateError model err, Cmd.none )
@@ -85,34 +89,37 @@ update msg model =
             ( updateError model endpoint.name, Cmd.none )
 
         CommitEdit endpoint id ->
-            saveEndpoint model endpoint id 
+            saveEndpoint model endpoint id
 
         CancelEdit ->
             ( { model | editor = Nothing }, Cmd.none )
 
         StartAdd ->
-            ( { model | editor = Just (EndpointEditor.forCreate defaultEndpoint ) }, Cmd.none )
+            ( { model | editor = Just (EndpointEditor.forCreate defaultEndpoint) }, Cmd.none )
 
         StartEdit endpoint ->
             ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
-        UpdateEdit (field, value) ->
+        UpdateEdit ( field, value ) ->
             case model.editor of
                 Just editor ->
                     ( { model | editor = Just (EndpointEditor.update editor field value) }, Cmd.none )
-                    
+
                 Nothing ->
                     ( model, Cmd.none )
 
-saveEndpoint : Model -> Endpoint -> Maybe String ->  ( Model, Cmd Msg )
+
+saveEndpoint : Model -> Endpoint -> Maybe String -> ( Model, Cmd Msg )
 saveEndpoint model endpoint id =
     if (endpoint.name == "") then
         ( model, Cmd.none )
     else
-        let model_ = 
-            { model | storage = updateStorage model.storage endpoint id, editor = Nothing } 
-        in 
-            ( model_ , updloadIfConnected model_ )
+        let
+            model_ =
+                { model | storage = updateStorage model.storage endpoint id, editor = Nothing }
+        in
+            ( model_, updloadIfConnected model_ )
+
 
 updloadIfConnected : Model -> Cmd Msg
 updloadIfConnected model =
@@ -126,12 +133,13 @@ updloadIfConnected model =
 
 updateStorage : Storage -> Endpoint -> Maybe String -> Storage
 updateStorage storage endpoint id =
-    case id of 
+    case id of
         Just id ->
             { storage | endpoints = replaceEndpointInList endpoint id storage.endpoints }
+
         Nothing ->
             { storage | endpoints = addEndpointInList endpoint storage.endpoints }
-        
+
 
 replaceEndpointInList : Endpoint -> String -> List Endpoint -> List Endpoint
 replaceEndpointInList endpoint id endpoints =
@@ -141,9 +149,11 @@ replaceEndpointInList endpoint id endpoints =
     in
         List.sortWith compareEnpoint (endpoint :: different)
 
+
 addEndpointInList : Endpoint -> List Endpoint -> List Endpoint
 addEndpointInList endpoint endpoints =
     List.sortWith compareEnpoint (endpoint :: endpoints)
+
 
 compareEnpoint : Endpoint -> Endpoint -> Order
 compareEnpoint ep1 ep2 =

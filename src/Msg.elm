@@ -4,14 +4,17 @@ import Dropbox
 import Material
 import Endpoint
 
+
 type alias Endpoint =
     Endpoint.Endpoint
+
 
 type Field
     = Name
     | User
     | Url
     | Password
+
 
 type Msg
     = LogInToDropbox

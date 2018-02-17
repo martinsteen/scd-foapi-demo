@@ -6,6 +6,7 @@ import Navigation
 import Storage exposing (Storage)
 import EndpointEditor exposing (Model)
 
+
 type alias Model =
     { storage : Storage.Storage
     , location : Navigation.Location
@@ -14,4 +15,3 @@ type alias Model =
     , mdl : Material.Model
     , editor : Maybe EndpointEditor.Model
     }
-
