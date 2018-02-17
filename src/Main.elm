@@ -7,7 +7,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import View exposing (..)
 import Storage exposing (..)
-import EndpointEditor exposing (updateEndpointEditor)
+import EndpointEditor exposing (createEditor, updateEndpointEditor)
 
 
 type alias Msg =
@@ -34,7 +34,7 @@ initialModel location =
     , storage =
         { endpoints = [] }
     , mdl = Material.model
-    , editor = EndpointEditor.initialModel defaultEndpoint
+    , editor = Nothing
     }
 
 
@@ -87,15 +87,29 @@ update msg model =
             ( updateError model endpoint.name, Cmd.none )
 
         UpdateEndpoints endpoint ->
-            ( { model | storage = replanceEndpointInStorage model.storage endpoint }, updloadIfConnected model )
+            let model_ = { model | storage = replanceEndpointInStorage model.storage endpoint, editor = Nothing } 
+            in ( model_, updloadIfConnected model_ )
+
+        CancelEdit ->
+            ( { model | editor = Nothing }, Cmd.none )
+
+        StartAdd ->
+            ( { model | editor = Just (createEditor defaultEndpoint) }, Cmd.none )
+
+        StartEdit endpoint ->
+            ( { model | editor = Just (createEditor endpoint) }, Cmd.none )
 
         EndpointEditor editorMessage ->
-            case (updateEndpointEditor editorMessage model.editor) of
-                ( editorModel , Just msg ) ->
-                    update msg { model | editor = editorModel } 
+            case model.editor of
+                Just editor ->
+                    case (updateEndpointEditor editorMessage editor) of
+                        ( editorModel , Just msg ) ->
+                            update msg { model | editor = Just editorModel } 
 
-                ( editorModel, Nothing ) ->
-                    ( { model | editor = editorModel }, Cmd.none )
+                        ( editorModel, Nothing ) ->
+                            ( { model | editor = Just editorModel }, Cmd.none )
+                Nothing ->
+                    ( model, Cmd.none )
 
 
 updloadIfConnected : Model -> Cmd Msg

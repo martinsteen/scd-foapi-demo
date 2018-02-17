@@ -23,11 +23,10 @@ type alias Model =
     , auth : Maybe Dropbox.UserAuth
     , error : Maybe String
     , mdl : Material.Model
-    , editor : EndpointEditorModel
+    , editor : Maybe EndpointEditorModel
     }
 
 type alias EndpointEditorModel =
-    { endpoint : Maybe Endpoint
-    , defaultEndpoint : Endpoint
+    { endpoint : Endpoint 
     }
 

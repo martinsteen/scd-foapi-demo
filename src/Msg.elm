@@ -17,10 +17,8 @@ type Field
 
 
 type EndpointEditorMsg
-    = Cancel
-    | Commit Endpoint
+    = Commit Endpoint
     | Update ( Field, String )
-    | Start (Maybe Endpoint)
 
 
 type Msg
@@ -32,3 +30,6 @@ type Msg
     | RemoveEndpoint Endpoint
     | EndpointEditor EndpointEditorMsg
     | UpdateEndpoints Endpoint
+    | StartEdit Endpoint
+    | StartAdd
+    | CancelEdit

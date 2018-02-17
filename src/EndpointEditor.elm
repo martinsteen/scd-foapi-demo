@@ -1,4 +1,4 @@
-module EndpointEditor exposing (updateEndpointEditor, renderEndpointInput, initialModel )
+module EndpointEditor exposing (createEditor, updateEndpointEditor, renderEndpointInput )
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -25,27 +25,14 @@ type alias Endpoint =
 type alias Mdl =
     Material.Model
 
-initialModel : Endpoint -> EndpointEditorModel    
-initialModel endpoint = 
-    { endpoint = Nothing
-    , defaultEndpoint=endpoint
-    }
+createEditor : Endpoint -> EndpointEditorModel 
+createEditor ep = 
+    EndpointEditorModel (ep)
 
 
 updateEndpointEditor : EndpointEditorMsg -> EndpointEditorModel -> ( EndpointEditorModel, Maybe Msg )
 updateEndpointEditor msg model =
     case msg of
-        Start endpoint ->
-            case endpoint of
-                Just ep ->
-                    ( { model | endpoint = Just ep }, Nothing )
-
-                Nothing ->
-                    ( { model | endpoint = Just model.defaultEndpoint }, Nothing )
-
-        Cancel ->
-            ( { model | endpoint = Nothing }, Nothing )
-
         Commit endpoint ->
             if (endpoint.name == "") then
                 ( model, Nothing )
@@ -53,47 +40,37 @@ updateEndpointEditor msg model =
                 ( model, Just (UpdateEndpoints endpoint) )
 
         Update ( field, value ) ->
-            case model.endpoint of
-                Just ep ->
-                    let
-                        model_ =
-                            { model | endpoint = updateFieldInModelUnderConstruction ep field value }
-                    in
-                        ( model_, Nothing )
-
-                Nothing ->
-                    ( model, Nothing )
+            let
+                model_ =
+                    { model | endpoint = updateFieldInModelUnderConstruction model.endpoint field value }
+            in
+                ( model_, Nothing )
 
 
-updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Maybe Endpoint
+updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Endpoint
 updateFieldInModelUnderConstruction endpoint field value =
     case field of
         Name ->
-            Just { endpoint | name = value }
+            { endpoint | name = value }
 
         Url ->
-            Just { endpoint | url = value }
+             { endpoint | url = value }
 
         Password ->
-            Just { endpoint | password = value }
+             { endpoint | password = value }
 
         User ->
-            Just { endpoint | user = value }
+             { endpoint | user = value }
 
 
 renderEndpointInput : Mdl -> EndpointEditorModel -> Html Msg
 renderEndpointInput mdl model =
     let ep = model.endpoint in  
-    case ep of
-        Just ep ->
-            Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
-                , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-                , div [] [ renderButton mdl ep "done" (EndpointEditor (Commit ep)), renderButton mdl ep "clear" (EndpointEditor Cancel) ]
-                ]
-
-        Nothing ->
-            text ""
+        Options.div [ css "margin" "10%" ]
+            [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
+            , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
+            , div [] [ renderButton mdl ep "done" (EndpointEditor (Commit ep)), renderButton mdl ep "clear" CancelEdit ]
+            ]
 
 
 renderButton : Mdl -> Endpoint -> String -> Msg -> Html Msg
