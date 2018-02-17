@@ -98,10 +98,10 @@ update msg model =
         StartEdit endpoint ->
             ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
-        EndpointEditor editorMessage ->
+        UpdateEdit (field, value) ->
             case model.editor of
                 Just editor ->
-                    ( { model | editor = Just (EndpointEditor.update editorMessage editor) }, Cmd.none )
+                    ( { model | editor = Just (EndpointEditor.update editor field value) }, Cmd.none )
                     
                 Nothing ->
                     ( model, Cmd.none )

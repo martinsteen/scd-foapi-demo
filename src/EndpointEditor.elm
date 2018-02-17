@@ -33,11 +33,9 @@ forModify ep id =
     EndpointEditorModel ep (Just id)
 
 
-update : EndpointEditorMsg -> EndpointEditorModel -> EndpointEditorModel
-update msg model =
-    case msg of
-        Update ( field, value ) ->
-            { model | endpoint = updateEditor model.endpoint field value }
+update : EndpointEditorModel -> Field -> String -> EndpointEditorModel
+update model field value =
+    { model | endpoint = updateEditor model.endpoint field value }
 
 
 updateEditor : Endpoint -> Field -> String -> Endpoint
@@ -79,6 +77,6 @@ renderInput mdl id field value =
         [ Textfield.label (toString field)
         , Textfield.floatingLabel
         , Textfield.value value
-        , Options.onInput (\value -> EndpointEditor (Update ( field, value )))
+        , Options.onInput (\value -> (UpdateEdit ( field, value )))
         ]
         []

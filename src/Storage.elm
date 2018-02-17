@@ -7,11 +7,12 @@ import Model
 import Dropbox
 import Task
 import Date
+import Endpoint
 import Msg exposing (..)
 
 
 type alias Endpoint =
-    Model.Endpoint
+    Endpoint.Endpoint
 
 
 type alias Storage =
@@ -53,7 +54,7 @@ storageDecoder =
 
 endpointDecoder : Decoder Endpoint
 endpointDecoder =
-    decode Model.Endpoint
+    decode Endpoint.Endpoint
         |> required "name" Json.Decode.string
         |> required "url" Json.Decode.string
         |> required "alerts" (list Json.Decode.int)

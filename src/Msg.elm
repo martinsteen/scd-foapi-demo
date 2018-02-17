@@ -2,21 +2,16 @@ module Msg exposing (..)
 
 import Dropbox
 import Material
-import Model
-
+import Endpoint
 
 type alias Endpoint =
-    Model.Endpoint
-
+    Endpoint.Endpoint
 
 type Field
     = Name
     | User
     | Url
     | Password
-
-type EndpointEditorMsg
-    =  Update ( Field, String )
 
 type Msg
     = LogInToDropbox
@@ -29,4 +24,4 @@ type Msg
     | StartEdit Endpoint
     | StartAdd
     | CancelEdit
-    | EndpointEditor EndpointEditorMsg
+    | UpdateEdit ( Field, String )
