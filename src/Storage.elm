@@ -1,9 +1,13 @@
-module Storage exposing (decodeStorage, encodeStorage)
+module Storage exposing (decodeStorage, uploadCmd, downloadCmd)
 
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
 import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
 import Model
+import Dropbox
+import Task
+import Date
+import Msg exposing (..)
 
 
 type alias Endpoint =
@@ -12,6 +16,33 @@ type alias Endpoint =
 
 type alias Storage =
     Model.Storage
+
+
+downloadCmd : Dropbox.UserAuth -> Cmd Msg.Msg
+downloadCmd auth =
+    Dropbox.download auth
+        { path = "/endpoint-data.json" }
+        |> Task.attempt FetchFileResponse
+
+
+uploadCmd : Dropbox.UserAuth -> Storage -> Cmd Msg
+uploadCmd auth storage =
+    storage
+        |> encodeStorage
+        |> createUploadReq
+        |> Dropbox.upload auth
+        |> Task.attempt PutFileReponse
+
+
+createUploadReq : String -> Dropbox.UploadRequest
+createUploadReq content =
+    Dropbox.UploadRequest
+        "/endpoint-data.json"
+        Dropbox.Overwrite
+        False
+        (Just <| Date.fromTime 0)
+        False
+        content
 
 
 storageDecoder : Decoder Storage

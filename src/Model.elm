@@ -25,4 +25,5 @@ type alias Model =
     , error : Maybe String
     , mdl : Material.Model
     , endpointUnderConstruction : Maybe Endpoint
+    , defaultEndpoint : Endpoint
     }
