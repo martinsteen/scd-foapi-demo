@@ -10,7 +10,7 @@ import Material.Color as Color
 import Material.Icon as Icon
 import Msg exposing (..)
 import Model exposing (..)
-import EndpointEditor exposing (renderEndpointInput)
+import EndpointEditor
 
 
 type alias Msg =
@@ -88,7 +88,7 @@ cardView model =
             ( case model.editor of
                 Nothing -> []
                 Just editor ->
-                    [ renderEndpointInput model.mdl editor ]
+                    [ EndpointEditor.render model.mdl editor ]
             )]
 
 

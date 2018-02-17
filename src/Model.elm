@@ -27,6 +27,7 @@ type alias Model =
     }
 
 type alias EndpointEditorModel =
-    { endpoint : Endpoint 
+    { endpoint : Endpoint
+    , id : Maybe String
     }
 

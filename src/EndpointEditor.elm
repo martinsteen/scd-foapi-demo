@@ -1,4 +1,4 @@
-module EndpointEditor exposing (createEditor, updateEndpointEditor, renderEndpointInput )
+module EndpointEditor exposing (forCreate, forModify, update, render )
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -21,34 +21,27 @@ type alias Model =
 type alias Endpoint =
     Model.Endpoint
 
-
 type alias Mdl =
     Material.Model
 
-createEditor : Endpoint -> EndpointEditorModel 
-createEditor ep = 
-    EndpointEditorModel (ep)
+forCreate : Endpoint -> EndpointEditorModel 
+forCreate ep = 
+    EndpointEditorModel ep Nothing
+
+forModify : Endpoint -> String -> EndpointEditorModel 
+forModify ep id = 
+    EndpointEditorModel ep (Just id)
 
 
-updateEndpointEditor : EndpointEditorMsg -> EndpointEditorModel -> ( EndpointEditorModel, Maybe Msg )
-updateEndpointEditor msg model =
+update : EndpointEditorMsg -> EndpointEditorModel -> EndpointEditorModel
+update msg model =
     case msg of
-        Commit endpoint ->
-            if (endpoint.name == "") then
-                ( model, Nothing )
-            else
-                ( model, Just (UpdateEndpoints endpoint) )
-
         Update ( field, value ) ->
-            let
-                model_ =
-                    { model | endpoint = updateFieldInModelUnderConstruction model.endpoint field value }
-            in
-                ( model_, Nothing )
+            { model | endpoint = updateEditor model.endpoint field value }
 
 
-updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Endpoint
-updateFieldInModelUnderConstruction endpoint field value =
+updateEditor : Endpoint -> Field -> String -> Endpoint
+updateEditor endpoint field value =
     case field of
         Name ->
             { endpoint | name = value }
@@ -63,13 +56,13 @@ updateFieldInModelUnderConstruction endpoint field value =
              { endpoint | user = value }
 
 
-renderEndpointInput : Mdl -> EndpointEditorModel -> Html Msg
-renderEndpointInput mdl model =
-    let ep = model.endpoint in  
+render : Mdl -> EndpointEditorModel -> Html Msg
+render mdl model =
+    let (ep,id) = (model.endpoint, model.id) in  
         Options.div [ css "margin" "10%" ]
             [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
             , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-            , div [] [ renderButton mdl ep "done" (EndpointEditor (Commit ep)), renderButton mdl ep "clear" CancelEdit ]
+            , div [] [ renderButton mdl ep "done" (CommitEdit ep id), renderButton mdl ep "clear" CancelEdit ]
             ]
 
 

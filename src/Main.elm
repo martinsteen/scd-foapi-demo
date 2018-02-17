@@ -7,7 +7,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import View exposing (..)
 import Storage exposing (..)
-import EndpointEditor exposing (createEditor, updateEndpointEditor)
+import EndpointEditor
 
 
 type alias Msg =
@@ -86,31 +86,35 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
-        UpdateEndpoints endpoint ->
-            let model_ = { model | storage = replanceEndpointInStorage model.storage endpoint, editor = Nothing } 
-            in ( model_, updloadIfConnected model_ )
+        CommitEdit endpoint id ->
+            saveEndpoint model endpoint id 
 
         CancelEdit ->
             ( { model | editor = Nothing }, Cmd.none )
 
         StartAdd ->
-            ( { model | editor = Just (createEditor defaultEndpoint) }, Cmd.none )
+            ( { model | editor = Just (EndpointEditor.forCreate defaultEndpoint ) }, Cmd.none )
 
         StartEdit endpoint ->
-            ( { model | editor = Just (createEditor endpoint) }, Cmd.none )
+            ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
         EndpointEditor editorMessage ->
             case model.editor of
                 Just editor ->
-                    case (updateEndpointEditor editorMessage editor) of
-                        ( editorModel , Just msg ) ->
-                            update msg { model | editor = Just editorModel } 
-
-                        ( editorModel, Nothing ) ->
-                            ( { model | editor = Just editorModel }, Cmd.none )
+                    ( { model | editor = Just (EndpointEditor.update editorMessage editor) }, Cmd.none )
+                    
                 Nothing ->
                     ( model, Cmd.none )
 
+saveEndpoint : Model -> Endpoint -> Maybe String ->  ( Model, Cmd Msg )
+saveEndpoint model endpoint id =
+    if (endpoint.name == "") then
+        ( model, Cmd.none )
+    else
+        let model_ = 
+            { model | storage = updateStorage model.storage endpoint id, editor = Nothing } 
+        in 
+            ( model_ , updloadIfConnected model_ )
 
 updloadIfConnected : Model -> Cmd Msg
 updloadIfConnected model =
@@ -122,19 +126,26 @@ updloadIfConnected model =
             Cmd.none
 
 
-replanceEndpointInStorage : Storage -> Endpoint -> Storage
-replanceEndpointInStorage storage endpoint =
-    { storage | endpoints = replaceEndpointInList endpoint storage.endpoints }
+updateStorage : Storage -> Endpoint -> Maybe String -> Storage
+updateStorage storage endpoint id =
+    case id of 
+        Just id ->
+            { storage | endpoints = replaceEndpointInList endpoint id storage.endpoints }
+        Nothing ->
+            { storage | endpoints = addEndpointInList endpoint storage.endpoints }
+        
 
-
-replaceEndpointInList : Endpoint -> List Endpoint -> List Endpoint
-replaceEndpointInList endpoint endpoints =
+replaceEndpointInList : Endpoint -> String -> List Endpoint -> List Endpoint
+replaceEndpointInList endpoint id endpoints =
     let
         ( same, different ) =
-            List.partition (\x -> x.name == endpoint.name) endpoints
+            List.partition (\x -> x.name == id) endpoints
     in
         List.sortWith compareEnpoint (endpoint :: different)
 
+addEndpointInList : Endpoint -> List Endpoint -> List Endpoint
+addEndpointInList endpoint endpoints =
+    List.sortWith compareEnpoint (endpoint :: endpoints)
 
 compareEnpoint : Endpoint -> Endpoint -> Order
 compareEnpoint ep1 ep2 =

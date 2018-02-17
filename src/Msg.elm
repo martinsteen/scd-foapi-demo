@@ -15,11 +15,8 @@ type Field
     | Url
     | Password
 
-
 type EndpointEditorMsg
-    = Commit Endpoint
-    | Update ( Field, String )
-
+    =  Update ( Field, String )
 
 type Msg
     = LogInToDropbox
@@ -28,8 +25,8 @@ type Msg
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
     | Mdl (Material.Msg Msg)
     | RemoveEndpoint Endpoint
-    | EndpointEditor EndpointEditorMsg
-    | UpdateEndpoints Endpoint
+    | CommitEdit Endpoint (Maybe String)
     | StartEdit Endpoint
     | StartAdd
     | CancelEdit
+    | EndpointEditor EndpointEditorMsg
