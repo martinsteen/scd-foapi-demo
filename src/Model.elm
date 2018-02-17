@@ -4,7 +4,6 @@ import Material
 import Dropbox
 import Navigation
 
-
 type alias Storage =
     { endpoints : List Endpoint }
 
@@ -24,6 +23,11 @@ type alias Model =
     , auth : Maybe Dropbox.UserAuth
     , error : Maybe String
     , mdl : Material.Model
-    , endpointUnderConstruction : Maybe Endpoint
+    , editor : EndpointEditorModel
+    }
+
+type alias EndpointEditorModel =
+    { endpoint : Maybe Endpoint
     , defaultEndpoint : Endpoint
     }
+

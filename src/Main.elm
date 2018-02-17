@@ -34,8 +34,7 @@ initialModel location =
     , storage =
         { endpoints = [] }
     , mdl = Material.model
-    , endpointUnderConstruction = Nothing
-    , defaultEndpoint = defaultEndpoint
+    , editor = EndpointEditor.initialModel defaultEndpoint
     }
 
 
@@ -91,12 +90,12 @@ update msg model =
             ( { model | storage = replanceEndpointInStorage model.storage endpoint }, updloadIfConnected model )
 
         EndpointEditor editorMessage ->
-            case (updateEndpointEditor editorMessage model) of
-                ( model_, Just msg ) ->
-                    update msg model_
+            case (updateEndpointEditor editorMessage model.editor) of
+                ( editorModel , Just msg ) ->
+                    update msg { model | editor = editorModel } 
 
-                ( model_, Nothing ) ->
-                    ( model_, Cmd.none )
+                ( editorModel, Nothing ) ->
+                    ( { model | editor = editorModel }, Cmd.none )
 
 
 updloadIfConnected : Model -> Cmd Msg

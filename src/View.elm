@@ -85,7 +85,7 @@ cardView model =
             [ renderEndpointChips model.storage.endpoints ]
         , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (EndpointEditor (Start Nothing)) ] [ Icon.i "add" ]
         , span []
-            [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
+            [ renderEndpointInput model.mdl model.editor ]
         ]
 
 

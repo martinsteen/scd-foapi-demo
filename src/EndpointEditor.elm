@@ -1,4 +1,4 @@
-module EndpointEditor exposing (updateEndpointEditor, renderEndpointInput)
+module EndpointEditor exposing (updateEndpointEditor, renderEndpointInput, initialModel )
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -25,20 +25,26 @@ type alias Endpoint =
 type alias Mdl =
     Material.Model
 
+initialModel : Endpoint -> EndpointEditorModel    
+initialModel endpoint = 
+    { endpoint = Nothing
+    , defaultEndpoint=endpoint
+    }
 
-updateEndpointEditor : EndpointEditorMsg -> Model -> ( Model, Maybe Msg )
+
+updateEndpointEditor : EndpointEditorMsg -> EndpointEditorModel -> ( EndpointEditorModel, Maybe Msg )
 updateEndpointEditor msg model =
     case msg of
         Start endpoint ->
             case endpoint of
                 Just ep ->
-                    ( { model | endpointUnderConstruction = Just ep }, Nothing )
+                    ( { model | endpoint = Just ep }, Nothing )
 
                 Nothing ->
-                    ( { model | endpointUnderConstruction = Just model.defaultEndpoint }, Nothing )
+                    ( { model | endpoint = Just model.defaultEndpoint }, Nothing )
 
         Cancel ->
-            ( { model | endpointUnderConstruction = Nothing }, Nothing )
+            ( { model | endpoint = Nothing }, Nothing )
 
         Commit endpoint ->
             if (endpoint.name == "") then
@@ -47,11 +53,11 @@ updateEndpointEditor msg model =
                 ( model, Just (UpdateEndpoints endpoint) )
 
         Update ( field, value ) ->
-            case model.endpointUnderConstruction of
+            case model.endpoint of
                 Just ep ->
                     let
                         model_ =
-                            { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }
+                            { model | endpoint = updateFieldInModelUnderConstruction ep field value }
                     in
                         ( model_, Nothing )
 
@@ -75,9 +81,10 @@ updateFieldInModelUnderConstruction endpoint field value =
             Just { endpoint | user = value }
 
 
-renderEndpointInput : Mdl -> Maybe Endpoint -> Html Msg
-renderEndpointInput mdl endpoint =
-    case endpoint of
+renderEndpointInput : Mdl -> EndpointEditorModel -> Html Msg
+renderEndpointInput mdl model =
+    let ep = model.endpoint in  
+    case ep of
         Just ep ->
             Options.div [ css "margin" "10%" ]
                 [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
