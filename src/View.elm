@@ -8,9 +8,9 @@ import Material.Options as Options exposing (css, cs)
 import Material.Chip as Chip
 import Material.Color as Color
 import Material.Icon as Icon
-import Material.Textfield as Textfield
 import Msg exposing (..)
 import Model exposing (..)
+import EndpointEditor exposing (renderEndpointInput)
 
 
 type alias Msg =
@@ -83,7 +83,7 @@ cardView model =
     span []
         [ span []
             [ renderEndpointChips model.storage.endpoints ]
-        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (StartEndpointEditor Nothing) ] [ Icon.i "add" ]
+        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick (EndpointEditor (StartEndpointEditor Nothing)) ] [ Icon.i "add" ]
         , span []
             [ renderEndpointInput model.mdl model.endpointUnderConstruction ]
         ]
@@ -96,7 +96,7 @@ renderEndpointChips endpoints =
             (\endpoint ->
                 Chip.span
                     [ Options.css "margin" "5px 5px"
-                    , Options.onClick (StartEndpointEditor (Just endpoint))
+                    , Options.onClick (EndpointEditor (StartEndpointEditor (Just endpoint)))
                     , Chip.deleteIcon "clear"
                     , Chip.deleteClick (RemoveEndpoint endpoint)
                     ]
@@ -106,33 +106,3 @@ renderEndpointChips endpoints =
             )
             endpoints
         )
-
-
-renderEndpointInput : Mdl -> Maybe Endpoint -> Html Msg
-renderEndpointInput mdl endpoint =
-    case endpoint of
-        Just ep ->
-            Options.div [ css "margin" "10%" ]
-                [ div [] [ renderInput mdl 1 Name ep.name, renderInput mdl 2 Url ep.url ]
-                , div [] [ renderInput mdl 3 User ep.user, renderInput mdl 4 Password ep.password ]
-                , div [] [ renderButton mdl ep "done" (CommitEndpointEditor ep),  renderButton mdl ep "clear" CancelEndpointEditor]
-                ]
-
-        Nothing ->
-            text ""
-
-renderButton : Mdl -> Endpoint -> String -> Msg -> Html Msg
-renderButton mdl ep icon onClick =
-    Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick onClick ] [ Icon.i icon ]
-
-renderInput : Mdl -> Int -> Field -> String -> Html Msg
-renderInput mdl id field value =
-    Textfield.render Mdl
-        [ id ]
-        mdl
-        [ Textfield.label (toString field)
-        , Textfield.floatingLabel
-        , Textfield.value value
-        , Options.onInput (\value -> UpdateEndpointEditor ( field, value ))
-        ]
-        []

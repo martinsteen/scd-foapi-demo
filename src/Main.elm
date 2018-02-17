@@ -9,6 +9,7 @@ import Model exposing (..)
 import Msg exposing (..)
 import View exposing (..)
 import Storage exposing (..)
+import EndpointEditor exposing (updateFieldInModelUnderConstruction)
 
 
 type alias Msg =
@@ -88,7 +89,7 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
-        StartEndpointEditor endpoint ->
+        EndpointEditor (StartEndpointEditor endpoint) ->
             case endpoint of
                 Just ep ->
                     ( { model | endpointUnderConstruction = Just ep }, Cmd.none )
@@ -96,10 +97,10 @@ update msg model =
                 Nothing ->
                     ( { model | endpointUnderConstruction = Just defaultEndpoint }, Cmd.none )
 
-        CancelEndpointEditor ->
+        EndpointEditor CancelEndpointEditor ->
             ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
 
-        CommitEndpointEditor endpoint ->
+        EndpointEditor (CommitEndpointEditor endpoint) ->
             if (endpoint.name == "") then
                 ( model, Cmd.none )
             else
@@ -109,7 +110,7 @@ update msg model =
                 in
                     ( { model_ | endpointUnderConstruction = Nothing }, msg_ )
 
-        UpdateEndpointEditor ( field, value ) ->
+        EndpointEditor (UpdateEndpointEditor ( field, value )) ->
             case model.endpointUnderConstruction of
                 Just ep ->
                     let
@@ -139,22 +140,6 @@ replaceEndpointInStorage model endpoint =
             { model | storage = replanceEndpointInStorage model.storage endpoint }
     in
         model_
-
-
-updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Maybe Endpoint
-updateFieldInModelUnderConstruction endpoint field value =
-    case field of
-        Name ->
-            Just { endpoint | name = value }
-
-        Url ->
-            Just { endpoint | url = value }
-
-        Password ->
-            Just { endpoint | password = value }
-
-        User ->
-            Just { endpoint | user = value }
 
 
 replanceEndpointInStorage : Storage -> Endpoint -> Storage

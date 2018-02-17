@@ -16,14 +16,18 @@ type Field
     | Password
 
 
+type EndpointEditorMsg
+    = CancelEndpointEditor
+    | CommitEndpointEditor Endpoint
+    | UpdateEndpointEditor ( Field, String )
+    | StartEndpointEditor (Maybe Endpoint)
+
+
 type Msg
     = LogInToDropbox
     | AuthResponse Dropbox.AuthorizeResult
     | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
     | Mdl (Material.Msg Msg)
-    | StartEndpointEditor (Maybe Endpoint)
-    | CancelEndpointEditor
     | RemoveEndpoint Endpoint
-    | CommitEndpointEditor Endpoint
-    | UpdateEndpointEditor ( Field, String )
+    | EndpointEditor EndpointEditorMsg
