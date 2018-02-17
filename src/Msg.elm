@@ -31,3 +31,4 @@ type Msg
     | Mdl (Material.Msg Msg)
     | RemoveEndpoint Endpoint
     | EndpointEditor EndpointEditorMsg
+    | UpdateEndpoints Endpoint

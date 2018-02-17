@@ -8,8 +8,6 @@ import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
 import Model exposing (..)
 import Msg exposing (..)
-import Dropbox
-import Storage exposing (..)
 
 
 type alias Msg =
@@ -28,29 +26,25 @@ type alias Mdl =
     Material.Model
 
 
-updateEndpointEditor : EndpointEditorMsg -> Model -> ( Model, Cmd Msg )
+updateEndpointEditor : EndpointEditorMsg -> Model -> ( Model, Maybe Msg )
 updateEndpointEditor msg model =
     case msg of
         Start endpoint ->
             case endpoint of
                 Just ep ->
-                    ( { model | endpointUnderConstruction = Just ep }, Cmd.none )
+                    ( { model | endpointUnderConstruction = Just ep }, Nothing )
 
                 Nothing ->
-                    ( { model | endpointUnderConstruction = Just model.defaultEndpoint }, Cmd.none )
+                    ( { model | endpointUnderConstruction = Just model.defaultEndpoint }, Nothing )
 
         Cancel ->
-            ( { model | endpointUnderConstruction = Nothing }, Cmd.none )
+            ( { model | endpointUnderConstruction = Nothing }, Nothing )
 
         Commit endpoint ->
             if (endpoint.name == "") then
-                ( model, Cmd.none )
+                ( model, Nothing )
             else
-                let
-                    ( model_, msg_ ) =
-                        ( replaceEndpointInStorage model endpoint, updloadIfConnected model )
-                in
-                    ( { model_ | endpointUnderConstruction = Nothing }, msg_ )
+                ( model, Just (UpdateEndpoints endpoint) )
 
         Update ( field, value ) ->
             case model.endpointUnderConstruction of
@@ -59,48 +53,10 @@ updateEndpointEditor msg model =
                         model_ =
                             { model | endpointUnderConstruction = updateFieldInModelUnderConstruction ep field value }
                     in
-                        ( model_, Cmd.none )
+                        ( model_, Nothing )
 
                 Nothing ->
-                    ( model, Cmd.none )
-
-
-updloadIfConnected : { a | auth : Maybe Dropbox.UserAuth, storage : Storage } -> Cmd Msg
-updloadIfConnected model =
-    case model.auth of
-        Just auth ->
-            uploadCmd auth model.storage
-
-        Nothing ->
-            Cmd.none
-
-
-replaceEndpointInStorage : { a | storage : Storage } -> Endpoint -> { a | storage : Storage }
-replaceEndpointInStorage model endpoint =
-    let
-        model_ =
-            { model | storage = replanceEndpointInStorage model.storage endpoint }
-    in
-        model_
-
-
-replanceEndpointInStorage : Storage -> Endpoint -> Storage
-replanceEndpointInStorage storage endpoint =
-    { storage | endpoints = replaceEndpointInList endpoint storage.endpoints }
-
-
-replaceEndpointInList : Endpoint -> List Endpoint -> List Endpoint
-replaceEndpointInList endpoint endpoints =
-    let
-        ( same, different ) =
-            List.partition (\x -> x.name == endpoint.name) endpoints
-    in
-        List.sortWith compareEnpoint (endpoint :: different)
-
-
-compareEnpoint : Endpoint -> Endpoint -> Order
-compareEnpoint ep1 ep2 =
-    compare ep1.name ep2.name
+                    ( model, Nothing )
 
 
 updateFieldInModelUnderConstruction : Endpoint -> Field -> String -> Maybe Endpoint

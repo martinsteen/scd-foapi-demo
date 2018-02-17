@@ -87,8 +87,45 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
+        UpdateEndpoints endpoint ->
+            ( { model | storage = replanceEndpointInStorage model.storage endpoint }, updloadIfConnected model )
+
         EndpointEditor editorMessage ->
-            updateEndpointEditor editorMessage model
+            case (updateEndpointEditor editorMessage model) of
+                ( model_, Just msg ) ->
+                    update msg model_
+
+                ( model_, Nothing ) ->
+                    ( model_, Cmd.none )
+
+
+updloadIfConnected : Model -> Cmd Msg
+updloadIfConnected model =
+    case model.auth of
+        Just auth ->
+            uploadCmd auth model.storage
+
+        Nothing ->
+            Cmd.none
+
+
+replanceEndpointInStorage : Storage -> Endpoint -> Storage
+replanceEndpointInStorage storage endpoint =
+    { storage | endpoints = replaceEndpointInList endpoint storage.endpoints }
+
+
+replaceEndpointInList : Endpoint -> List Endpoint -> List Endpoint
+replaceEndpointInList endpoint endpoints =
+    let
+        ( same, different ) =
+            List.partition (\x -> x.name == endpoint.name) endpoints
+    in
+        List.sortWith compareEnpoint (endpoint :: different)
+
+
+compareEnpoint : Endpoint -> Endpoint -> Order
+compareEnpoint ep1 ep2 =
+    compare ep1.name ep2.name
 
 
 main : Program Never Model (Dropbox.Msg Msg)
