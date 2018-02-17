@@ -9,6 +9,7 @@ import View exposing (..)
 import Storage exposing (..)
 import EndpointEditor
 import Task
+import Endpoint
 
 type alias Msg =
     Msg.Msg
@@ -17,7 +18,7 @@ type alias Model =
     Model.Model
 
 type alias Endpoint =
-    Model.Endpoint
+    Endpoint.Endpoint
 
 type alias Storage =
     Storage.Storage

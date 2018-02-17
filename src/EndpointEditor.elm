@@ -1,4 +1,4 @@
-module EndpointEditor exposing (forCreate, forModify, update, render )
+module EndpointEditor exposing (Model, forCreate, forModify, update, render )
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -6,16 +6,18 @@ import Material.Button as Button
 import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
-import Model exposing (Model, EndpointEditorModel)
+
 import Endpoint
 import Msg exposing (..)
+
+type alias Model =
+    { endpoint : Endpoint
+    , id : Maybe String
+    }
 
 
 type alias Msg =
     Msg.Msg
-
-type alias Model =
-    Model.Model
 
 type alias Endpoint =
     Endpoint.Endpoint
@@ -23,16 +25,16 @@ type alias Endpoint =
 type alias Mdl =
     Material.Model
 
-forCreate : Endpoint -> EndpointEditorModel 
+forCreate : Endpoint -> Model 
 forCreate ep = 
-    EndpointEditorModel ep Nothing
+    Model ep Nothing
 
-forModify : Endpoint -> String -> EndpointEditorModel 
+forModify : Endpoint -> String -> Model 
 forModify ep id = 
-    EndpointEditorModel ep (Just id)
+    Model ep (Just id)
 
 
-update : EndpointEditorModel -> Field -> String -> EndpointEditorModel
+update : Model -> Field -> String -> Model
 update model field value =
     { model | endpoint = updateEditor model.endpoint field value }
 
@@ -53,7 +55,7 @@ updateEditor endpoint field value =
              { endpoint | user = value }
 
 
-render : Mdl -> EndpointEditorModel -> Html Msg
+render : Mdl -> Model -> Html Msg
 render mdl model =
     let (ep,id) = (model.endpoint, model.id) in  
         Options.div [ css "margin" "10%" ]

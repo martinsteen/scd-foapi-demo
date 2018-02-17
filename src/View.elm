@@ -11,6 +11,7 @@ import Material.Icon as Icon
 import Msg exposing (..)
 import Model exposing (..)
 import EndpointEditor
+import Endpoint
 
 
 type alias Msg =
@@ -22,7 +23,7 @@ type alias Model =
 
 
 type alias Endpoint =
-    Model.Endpoint
+    Endpoint.Endpoint
 
 
 type alias Mdl =
