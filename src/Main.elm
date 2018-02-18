@@ -91,7 +91,8 @@ update msg model =
         CommitEdit endpoint id ->
             case (searchErrors model endpoint id) of
                 Just err ->
-                    ( updateEditor model Name err, Cmd.none )
+                    ( updateEditor model Name (Error err), Cmd.none )
+
                 Nothing ->
                     saveEndpoint model endpoint id
 
@@ -104,15 +105,15 @@ update msg model =
         StartEdit endpoint ->
             ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
-        UpdateEdit ( field, value ) ->
-            ( updateEditor model field value, Cmd.none )
+        UpdateEdit ( field, fieldInput ) ->
+            ( updateEditor model field fieldInput, Cmd.none )
 
 
-updateEditor : Model -> Field -> String -> Model
-updateEditor model field value =
+updateEditor : Model -> Field -> FieldInput -> Model
+updateEditor model field fieldInput =
     case model.editor of
         Just editor ->
-            { model | editor = Just (EndpointEditor.update editor field value) }
+            { model | editor = Just (EndpointEditor.update editor field fieldInput) }
 
         Nothing ->
             model
@@ -122,10 +123,19 @@ searchErrors : Model -> Endpoint -> Maybe String -> Maybe String
 searchErrors model endpoint id =
     if (endpoint.name == "") then
         Just "please provide a name"
-    else if (id == Nothing && containsName model endpoint.name) then
-        Just "this name already  exist"
-    else
-        Nothing
+    else 
+        case id of
+            Just id ->
+                if (id /= endpoint.name && containsName model endpoint.name) then
+                    Just "this name already  exist"
+                else
+                    Nothing
+
+            Nothing ->
+                if (containsName model endpoint.name) then
+                    Just "this name already  exist"
+                else
+                    Nothing
 
 
 saveEndpoint : Model -> Endpoint -> Maybe String -> ( Model, Cmd Msg )

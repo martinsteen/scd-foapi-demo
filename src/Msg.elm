@@ -15,6 +15,9 @@ type Field
     | Url
     | Password
 
+type FieldInput
+    = Error String
+    | Value String
 
 type Msg
     = LogInToDropbox
@@ -27,4 +30,4 @@ type Msg
     | StartEdit Endpoint
     | StartAdd
     | CancelEdit
-    | UpdateEdit ( Field, String )
+    | UpdateEdit ( Field, FieldInput )
