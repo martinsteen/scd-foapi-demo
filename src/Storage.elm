@@ -1,8 +1,8 @@
-module Storage exposing (Storage, decodeStorage, uploadCmd, downloadCmd)
+module Storage exposing (Storage, findUpdateProblems, update, decode, uploadTask, downloadTask)
 
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
-import Json.Decode.Pipeline exposing (decode, required, optional, hardcoded)
+import Json.Decode.Pipeline exposing (required, optional, hardcoded)
 import Dropbox
 import Task
 import Date
@@ -17,16 +17,16 @@ type alias Storage =
     { endpoints : List Endpoint }
 
 
-downloadCmd : Dropbox.UserAuth -> Task.Task Dropbox.DownloadError Dropbox.DownloadResponse
-downloadCmd auth =
+downloadTask : Dropbox.UserAuth -> Task.Task Dropbox.DownloadError Dropbox.DownloadResponse
+downloadTask auth =
     Dropbox.download auth
         { path = "/endpoint-data.json" }
 
 
-uploadCmd : Dropbox.UserAuth -> Storage -> Task.Task Dropbox.UploadError Dropbox.UploadResponse
-uploadCmd auth storage =
+uploadTask : Dropbox.UserAuth -> Storage -> Task.Task Dropbox.UploadError Dropbox.UploadResponse
+uploadTask auth storage =
     storage
-        |> encodeStorage
+        |> encode
         |> createUploadReq
         |> Dropbox.upload auth
 
@@ -44,13 +44,13 @@ createUploadReq content =
 
 storageDecoder : Decoder Storage
 storageDecoder =
-    decode Storage
+    Json.Decode.Pipeline.decode Storage
         |> required "endpoints" (list endpointDecoder)
 
 
 endpointDecoder : Decoder Endpoint
 endpointDecoder =
-    decode Endpoint.Endpoint
+    Json.Decode.Pipeline.decode Endpoint.Endpoint
         |> required "name" Json.Decode.string
         |> required "url" Json.Decode.string
         |> required "alerts" (list Json.Decode.int)
@@ -58,8 +58,8 @@ endpointDecoder =
         |> required "password" Json.Decode.string
 
 
-decodeStorage : String -> Result String Storage
-decodeStorage =
+decode : String -> Result String Storage
+decode =
     Json.Decode.decodeString storageDecoder
 
 
@@ -85,8 +85,61 @@ storageEncoder storage =
         ]
 
 
-encodeStorage : Storage -> String
-encodeStorage storage =
+encode : Storage -> String
+encode storage =
     storage
         |> storageEncoder
         |> Json.Encode.encode 2
+
+
+update : Storage -> Endpoint -> Maybe String -> Storage
+update storage endpoint id =
+    case id of
+        Just id ->
+            { storage | endpoints = replaceEndpointInList endpoint id storage.endpoints }
+
+        Nothing ->
+            { storage | endpoints = addEndpointInList endpoint storage.endpoints }
+
+
+replaceEndpointInList : Endpoint -> String -> List Endpoint -> List Endpoint
+replaceEndpointInList endpoint id endpoints =
+    let
+        ( same, different ) =
+            List.partition (\x -> x.name == id) endpoints
+    in
+        List.sortWith compareEnpoint (endpoint :: different)
+
+
+addEndpointInList : Endpoint -> List Endpoint -> List Endpoint
+addEndpointInList endpoint endpoints =
+    List.sortWith compareEnpoint (endpoint :: endpoints)
+
+
+compareEnpoint : Endpoint -> Endpoint -> Order
+compareEnpoint ep1 ep2 =
+    compare ep1.name ep2.name
+
+
+containsName : Storage -> String -> Bool
+containsName storage id =
+    List.any (\x -> x.name == id) storage.endpoints
+
+
+findUpdateProblems : Storage -> Endpoint -> Maybe String -> Maybe String
+findUpdateProblems storage endpoint oldName =
+    if (endpoint.name == "") then
+        Just "please provide a name"
+    else
+        case oldName of
+            Just oldName ->
+                if (oldName /= endpoint.name && containsName storage endpoint.name) then
+                    Just "this name already  exist"
+                else
+                    Nothing
+
+            Nothing ->
+                if (containsName storage endpoint.name) then
+                    Just "this name already  exist"
+                else
+                    Nothing

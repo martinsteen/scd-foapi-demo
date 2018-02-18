@@ -89,6 +89,7 @@ render mdl model =
             , div [] [ renderButton mdl ep "done" (CommitEdit ep id), renderButton mdl ep "clear" CancelEdit ]
             ]
 
+
 findFieldError : Model -> Field -> Maybe String
 findFieldError model field =
     let 

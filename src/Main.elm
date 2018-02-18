@@ -5,8 +5,8 @@ import Navigation
 import Dropbox
 import Model exposing (..)
 import Msg exposing (..)
-import View exposing (..)
-import Storage exposing (..)
+import View
+import Storage
 import EndpointEditor
 import Task
 import Endpoint
@@ -26,7 +26,6 @@ type alias Endpoint =
 
 type alias Storage =
     Storage.Storage
-
 
 initialModel : Navigation.Location -> Model
 initialModel location =
@@ -55,7 +54,7 @@ update msg model =
             ( model, Cmd.none )
 
         AuthResponse (Dropbox.AuthorizeOk auth) ->
-            ( updateAuth model auth, downloadCmd auth.userAuth |> Task.attempt FetchFileResponse )
+            ( updateAuth model auth, Storage.downloadTask auth.userAuth |> Task.attempt FetchFileResponse )
 
         AuthResponse (Dropbox.DropboxAuthorizeErr err) ->
             ( updateError model err, Cmd.none )
@@ -64,7 +63,7 @@ update msg model =
             ( updateError model err, Cmd.none )
 
         FetchFileResponse (Ok content) ->
-            case Storage.decodeStorage content.content of
+            case Storage.decode content.content of
                 Ok endpoints ->
                     ( { model | storage = endpoints }, Cmd.none )
 
@@ -74,7 +73,7 @@ update msg model =
         FetchFileResponse (Err (Dropbox.PathDownloadError err)) ->
             case model.auth of
                 Just auth ->
-                    ( model, uploadCmd auth model.storage |> Task.attempt PutFileReponse )
+                    ( model, Storage.uploadTask auth model.storage |> Task.attempt PutFileReponse )
 
                 Nothing ->
                     ( updateError model err, Cmd.none )
@@ -88,13 +87,13 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
-        CommitEdit endpoint id ->
-            case (searchErrors model endpoint id) of
+        CommitEdit endpoint oldName ->
+            case (Storage.findUpdateProblems model.storage endpoint oldName) of
                 Just err ->
                     ( updateEditor model Name (Error err), Cmd.none )
 
                 Nothing ->
-                    saveEndpoint model endpoint id
+                    saveEndpoint model endpoint oldName
 
         CancelEdit ->
             ( { model | editor = Nothing }, Cmd.none )
@@ -119,76 +118,24 @@ updateEditor model field fieldInput =
             model
 
 
-searchErrors : Model -> Endpoint -> Maybe String -> Maybe String
-searchErrors model endpoint id =
-    if (endpoint.name == "") then
-        Just "please provide a name"
-    else 
-        case id of
-            Just id ->
-                if (id /= endpoint.name && containsName model endpoint.name) then
-                    Just "this name already  exist"
-                else
-                    Nothing
-
-            Nothing ->
-                if (containsName model endpoint.name) then
-                    Just "this name already  exist"
-                else
-                    Nothing
-
-
 saveEndpoint : Model -> Endpoint -> Maybe String -> ( Model, Cmd Msg )
-saveEndpoint model endpoint id =
+saveEndpoint model endpoint oldName =
     let
         model_ =
-            { model | storage = updateStorage model.storage endpoint id, editor = Nothing }
+            { model | storage = Storage.update model.storage endpoint oldName, editor = Nothing }
     in
         ( model_, updloadIfConnected model_ )
 
-
-containsName : Model -> String -> Bool
-containsName model id =
-    List.any (\x -> x.name == id) model.storage.endpoints
 
 
 updloadIfConnected : Model -> Cmd Msg
 updloadIfConnected model =
     case model.auth of
         Just auth ->
-            uploadCmd auth model.storage |> Task.attempt PutFileReponse
+            Storage.uploadTask auth model.storage |> Task.attempt PutFileReponse
 
         Nothing ->
             Cmd.none
-
-
-updateStorage : Storage -> Endpoint -> Maybe String -> Storage
-updateStorage storage endpoint id =
-    case id of
-        Just id ->
-            { storage | endpoints = replaceEndpointInList endpoint id storage.endpoints }
-
-        Nothing ->
-            { storage | endpoints = addEndpointInList endpoint storage.endpoints }
-
-
-replaceEndpointInList : Endpoint -> String -> List Endpoint -> List Endpoint
-replaceEndpointInList endpoint id endpoints =
-    let
-        ( same, different ) =
-            List.partition (\x -> x.name == id) endpoints
-    in
-        List.sortWith compareEnpoint (endpoint :: different)
-
-
-addEndpointInList : Endpoint -> List Endpoint -> List Endpoint
-addEndpointInList endpoint endpoints =
-    List.sortWith compareEnpoint (endpoint :: endpoints)
-
-
-compareEnpoint : Endpoint -> Endpoint -> Order
-compareEnpoint ep1 ep2 =
-    compare ep1.name ep2.name
 
 
 main : Program Never Model (Dropbox.Msg Msg)
@@ -197,7 +144,7 @@ main =
         { init = \location -> ( initialModel location, Cmd.none )
         , update = update
         , subscriptions = always Sub.none
-        , view = view
+        , view = View.view
         , onAuth = AuthResponse
         }
 

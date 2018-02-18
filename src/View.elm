@@ -1,4 +1,4 @@
-module View exposing (..)
+module View exposing (view)
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
