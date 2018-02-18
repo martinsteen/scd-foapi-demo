@@ -89,7 +89,11 @@ update msg model =
             ( updateError model endpoint.name, Cmd.none )
 
         CommitEdit endpoint id ->
-            saveEndpoint model endpoint id
+            case (searchErrors model endpoint id) of
+                Just err ->
+                    ( updateEditor model Name err, Cmd.none )
+                Nothing ->
+                    saveEndpoint model endpoint id
 
         CancelEdit ->
             ( { model | editor = Nothing }, Cmd.none )
@@ -101,24 +105,41 @@ update msg model =
             ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
         UpdateEdit ( field, value ) ->
-            case model.editor of
-                Just editor ->
-                    ( { model | editor = Just (EndpointEditor.update editor field value) }, Cmd.none )
+            ( updateEditor model field value, Cmd.none )
 
-                Nothing ->
-                    ( model, Cmd.none )
+
+updateEditor : Model -> Field -> String -> Model
+updateEditor model field value =
+    case model.editor of
+        Just editor ->
+            { model | editor = Just (EndpointEditor.update editor field value) }
+
+        Nothing ->
+            model
+
+
+searchErrors : Model -> Endpoint -> Maybe String -> Maybe String
+searchErrors model endpoint id =
+    if (endpoint.name == "") then
+        Just "please provide a name"
+    else if (id == Nothing && containsName model endpoint.name) then
+        Just "this name already  exist"
+    else
+        Nothing
 
 
 saveEndpoint : Model -> Endpoint -> Maybe String -> ( Model, Cmd Msg )
 saveEndpoint model endpoint id =
-    if (endpoint.name == "") then
-        ( model, Cmd.none )
-    else
-        let
-            model_ =
-                { model | storage = updateStorage model.storage endpoint id, editor = Nothing }
-        in
-            ( model_, updloadIfConnected model_ )
+    let
+        model_ =
+            { model | storage = updateStorage model.storage endpoint id, editor = Nothing }
+    in
+        ( model_, updloadIfConnected model_ )
+
+
+containsName : Model -> String -> Bool
+containsName model id =
+    List.any (\x -> x.name == id) model.storage.endpoints
 
 
 updloadIfConnected : Model -> Cmd Msg
