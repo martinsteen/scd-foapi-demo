@@ -90,7 +90,7 @@ update msg model =
         CommitEdit endpoint oldName ->
             case (Storage.findUpdateProblems model.storage endpoint oldName) of
                 Just err ->
-                    ( updateEditor model Name (Error err), Cmd.none )
+                    ( updateEditor model Endpoint.Name (Endpoint.Error err), Cmd.none )
 
                 Nothing ->
                     saveEndpoint model endpoint oldName

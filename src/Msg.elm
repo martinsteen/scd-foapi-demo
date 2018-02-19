@@ -8,16 +8,13 @@ import Endpoint
 type alias Endpoint =
     Endpoint.Endpoint
 
+type alias Field =
+    Endpoint.Field
 
-type Field
-    = Name
-    | User
-    | Url
-    | Password
+type alias FieldInput =
+    Endpoint.FieldInput
 
-type FieldInput
-    = Error String
-    | Value String
+
 
 type Msg
     = LogInToDropbox

@@ -93,26 +93,26 @@ encode storage =
 
 
 update : Storage -> Endpoint -> Maybe String -> Storage
-update storage endpoint id =
-    case id of
-        Just id ->
-            { storage | endpoints = replaceEndpointInList endpoint id storage.endpoints }
+update storage endpoint oldName =
+    case oldName of
+        Just oldName ->
+            { storage | endpoints = replaceEndpoint endpoint oldName storage.endpoints }
 
         Nothing ->
-            { storage | endpoints = addEndpointInList endpoint storage.endpoints }
+            { storage | endpoints = addEndpoint endpoint storage.endpoints }
 
 
-replaceEndpointInList : Endpoint -> String -> List Endpoint -> List Endpoint
-replaceEndpointInList endpoint id endpoints =
+replaceEndpoint : Endpoint -> String -> List Endpoint -> List Endpoint
+replaceEndpoint endpoint oldName endpoints =
     let
         ( same, different ) =
-            List.partition (\x -> x.name == id) endpoints
+            List.partition (\x -> x.name == oldName) endpoints
     in
         List.sortWith compareEnpoint (endpoint :: different)
 
 
-addEndpointInList : Endpoint -> List Endpoint -> List Endpoint
-addEndpointInList endpoint endpoints =
+addEndpoint : Endpoint -> List Endpoint -> List Endpoint
+addEndpoint endpoint endpoints =
     List.sortWith compareEnpoint (endpoint :: endpoints)
 
 

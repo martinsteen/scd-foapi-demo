@@ -7,10 +7,15 @@ import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
 import Endpoint
-import Msg exposing (..)
 
 
-type alias Error =
+type alias Field =
+    Endpoint.Field
+
+type alias FieldInput =
+    Endpoint.FieldInput
+
+type alias Error_ =
     { field : Field
     , error : String
     }
@@ -19,12 +24,8 @@ type alias Error =
 type alias Model =
     { endpoint : Endpoint
     , id : Maybe String
-    , errors : List Error
+    , errors : List Error_
     }
-
-
-type alias Msg =
-    Msg.Msg
 
 
 type alias Endpoint =
@@ -48,83 +49,81 @@ forModify ep id =
 update : Model -> Field -> FieldInput -> Model
 update model field fieldInput =
     case fieldInput of
-        Value value ->
+        Endpoint.Value value ->
             { model | endpoint = updateEditor model.endpoint field value }
 
-        Error err ->
-            { model | errors = (Error field err :: model.errors) }
+        Endpoint.Error err ->
+            { model | errors = (Error_ field err :: model.errors) }
 
 
 updateEditor : Endpoint -> Field -> String -> Endpoint
 updateEditor endpoint field value =
     case field of
-        Name ->
+        Endpoint.Name ->
             { endpoint | name = value }
 
-        Url ->
+        Endpoint.Url ->
             { endpoint | url = value }
 
-        Password ->
+        Endpoint.Password ->
             { endpoint | password = value }
 
-        User ->
+        Endpoint.User ->
             { endpoint | user = value }
 
 
-render : Mdl -> Model -> Html Msg
-render mdl model =
+render mdl model mdlMsg commitMsg cancelMsg updateMsg =
     let
         ( ep, id ) =
             ( model.endpoint, model.id )
     in
         Options.div [ css "margin" "10%" ]
             [ div []
-                [ renderInput mdl 1 Name ep.name (findFieldError model Name)
-                , renderInput mdl 2 Url ep.url (findFieldError model Url)
+                [ renderInput mdl 1 Endpoint.Name ep.name (findFieldError model Endpoint.Name) mdlMsg updateMsg
+                , renderInput mdl 2 Endpoint.Url ep.url (findFieldError model Endpoint.Url) mdlMsg updateMsg
                 ]
             , div []
-                [ renderInput mdl 3 User ep.user (findFieldError model User)
-                , renderInput mdl 4 Password ep.password (findFieldError model Password)
+                [ renderInput mdl 3 Endpoint.User ep.user (findFieldError model Endpoint.User) mdlMsg updateMsg
+                , renderInput mdl 4 Endpoint.Password ep.password (findFieldError model Endpoint.Password) mdlMsg updateMsg
                 ]
-            , div [] [ renderButton mdl ep "done" (CommitEdit ep id), renderButton mdl ep "clear" CancelEdit ]
+            , div [] [ renderButton mdl ep "done" (commitMsg ep id) mdlMsg, renderButton mdl ep "clear" cancelMsg mdlMsg ]
             ]
 
 
 findFieldError : Model -> Field -> Maybe String
 findFieldError model field =
-    let 
-        ( a,b ) = 
-            List.partition (\aa -> aa.field == field ) model.errors
+    let
+        ( a, b ) =
+            List.partition (\aa -> aa.field == field) model.errors
     in
         List.head (List.map (\x -> x.error) a)
 
 
-renderButton : Mdl -> Endpoint -> String -> Msg -> Html Msg
-renderButton mdl ep icon onClick =
-    Button.render Mdl [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick onClick ] [ Icon.i icon ]
+renderButton mdl ep icon onClick mdlMsg =
+    Button.render mdlMsg [ 0 ] mdl [ Button.fab, Button.colored, Options.onClick onClick ] [ Icon.i icon ]
 
 
-renderInput : Mdl -> Int -> Field -> String -> Maybe String -> Html Msg
-renderInput mdl id field value error =
+renderInput mdl id field value error mdlMsg updateMsg =
     case error of
         Nothing ->
-            Textfield.render Mdl
+            Textfield.render mdlMsg
                 [ id ]
                 mdl
                 [ Textfield.label (toString field)
                 , Textfield.floatingLabel
                 , Textfield.value value
-                , Options.onInput (\value -> (UpdateEdit ( field, Value value )))
-                ] 
+                , Options.onInput (\v -> updateMsg (field, Endpoint.Value value))
+                ]
                 []
+
         Just err ->
-            Textfield.render Mdl
+            Textfield.render mdlMsg
                 [ id ]
                 mdl
                 [ Textfield.label (toString field)
                 , Textfield.floatingLabel
                 , Textfield.value value
                 , Textfield.error err
-                , Options.onInput (\value -> (UpdateEdit ( field, Value value )))
-                ] 
+                , Options.onInput (\v -> updateMsg (field, Endpoint.Value value))
+                ]
                 []

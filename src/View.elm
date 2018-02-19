@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import Html exposing (Html, text, div, h2, p, span)
+import Html exposing (Html, map, text, div, h2, p, span)
 import Material
 import Material.Scheme
 import Material.Button as Button
@@ -91,7 +91,7 @@ cardView model =
                     []
 
                 Just editor ->
-                    [ EndpointEditor.render model.mdl editor ]
+                    [ EndpointEditor.render model.mdl editor Mdl CommitEdit CancelEdit UpdateEdit ]
             )
         ]
 
