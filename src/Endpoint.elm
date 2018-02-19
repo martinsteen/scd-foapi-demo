@@ -8,13 +8,3 @@ type alias Endpoint =
     , user : String
     , password : String
     }
-
-type Field
-    = Name
-    | User
-    | Url
-    | Password
-
-type FieldInput
-    = Error String
-    | Value String

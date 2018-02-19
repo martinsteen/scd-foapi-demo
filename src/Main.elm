@@ -1,10 +1,10 @@
 module Main exposing (..)
 
+import Model exposing (..)
+import Msg exposing (..)
 import Material
 import Navigation
 import Dropbox
-import Model exposing (..)
-import Msg exposing (..)
 import View
 import Storage
 import EndpointEditor
@@ -26,6 +26,7 @@ type alias Endpoint =
 
 type alias Storage =
     Storage.Storage
+
 
 initialModel : Navigation.Location -> Model
 initialModel location =
@@ -90,7 +91,7 @@ update msg model =
         CommitEdit endpoint oldName ->
             case (Storage.findUpdateProblems model.storage endpoint oldName) of
                 Just err ->
-                    ( updateEditor model Endpoint.Name (Endpoint.Error err), Cmd.none )
+                    ( updateEditor model EndpointEditor.Name (EndpointEditor.Error err), Cmd.none )
 
                 Nothing ->
                     saveEndpoint model endpoint oldName
@@ -108,7 +109,7 @@ update msg model =
             ( updateEditor model field fieldInput, Cmd.none )
 
 
-updateEditor : Model -> Field -> FieldInput -> Model
+updateEditor : Model -> EndpointEditor.Field -> EndpointEditor.FieldContent -> Model
 updateEditor model field fieldInput =
     case model.editor of
         Just editor ->
@@ -125,7 +126,6 @@ saveEndpoint model endpoint oldName =
             { model | storage = Storage.update model.storage endpoint oldName, editor = Nothing }
     in
         ( model_, updloadIfConnected model_ )
-
 
 
 updloadIfConnected : Model -> Cmd Msg
