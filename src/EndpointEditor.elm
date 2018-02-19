@@ -118,7 +118,6 @@ renderButton mdl ep icon onClick mdlMsg =
         ]
         [ Icon.i icon ]
 
-
 renderInput mdl id field value error mdlMsg updateMsg =
     case error of
         Nothing ->
@@ -128,7 +127,7 @@ renderInput mdl id field value error mdlMsg updateMsg =
                 [ Textfield.label (toString field)
                 , Textfield.floatingLabel
                 , Textfield.value value
-                , Options.onInput (\v -> updateMsg ( field, Value value ))
+                , Options.onInput (\value -> updateMsg ( field, Value value ))
                 ]
                 []
 
@@ -140,6 +139,6 @@ renderInput mdl id field value error mdlMsg updateMsg =
                 , Textfield.floatingLabel
                 , Textfield.value value
                 , Textfield.error err
-                , Options.onInput (\v -> updateMsg ( field, Value value ))
+                , Options.onInput (\value -> updateMsg ( field, Value value ))
                 ]
                 []
