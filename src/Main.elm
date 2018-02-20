@@ -88,25 +88,25 @@ update msg model =
         RemoveEndpoint endpoint ->
             ( updateError model endpoint.name, Cmd.none )
 
-        CommitEdit endpoint oldName ->
-            case (Storage.findUpdateProblems model.storage endpoint oldName) of
-                Just err ->
-                    ( updateEditor model EndpointEditor.Name (EndpointEditor.Error err), Cmd.none )
-
-                Nothing ->
-                    saveEndpoint model endpoint oldName
-
-        CancelEdit ->
-            ( { model | editor = Nothing }, Cmd.none )
-
         StartAdd ->
             ( { model | editor = Just (EndpointEditor.forCreate defaultEndpoint) }, Cmd.none )
 
         StartEdit endpoint ->
             ( { model | editor = Just (EndpointEditor.forModify endpoint endpoint.name) }, Cmd.none )
 
-        UpdateEdit ( field, fieldInput ) ->
+        EpEdit (EndpointEditor.UpdateEditor ( field, fieldInput )) ->
             ( updateEditor model field fieldInput, Cmd.none )
+
+        EpEdit EndpointEditor.CancelEditor ->
+            ( { model | editor = Nothing }, Cmd.none )
+
+        EpEdit (EndpointEditor.CommitEditor endpoint oldName) ->
+            case (Storage.findUpdateProblems model.storage endpoint oldName) of
+                Just err ->
+                    ( updateEditor model EndpointEditor.Name (EndpointEditor.Error err), Cmd.none )
+
+                Nothing ->
+                    saveEndpoint model endpoint oldName
 
 
 updateEditor : Model -> EndpointEditor.Field -> EndpointEditor.FieldContent -> Model

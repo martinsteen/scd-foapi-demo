@@ -1,4 +1,4 @@
-module EndpointEditor exposing (Model, Field(..), FieldContent(..), forCreate, forModify, update, render)
+module EndpointEditor exposing (Model, Msg(..), FieldContent(..), Field(..), forCreate, forModify, update, render)
 
 import Html exposing (Html, text, div, h2, p, span)
 import Material
@@ -7,6 +7,12 @@ import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
 import Endpoint
+
+
+type Msg msg
+    = UpdateEditor ( Field, FieldContent )
+    | CommitEditor Endpoint (Maybe String)
+    | CancelEditor
 
 
 type Field
@@ -78,23 +84,23 @@ updateEditor endpoint field value =
             { endpoint | user = value }
 
 
-render mdl model mdlMsg commitMsg cancelMsg updateMsg =
+render mdl model mdlMsg epmsg =
     let
         ( ep, id ) =
             ( model.endpoint, model.id )
     in
         Options.div [ css "margin" "10%" ]
             [ div []
-                [ renderInput mdl 1 Name ep.name (findFieldError model Name) mdlMsg updateMsg
-                , renderInput mdl 2 Url ep.url (findFieldError model Url) mdlMsg updateMsg
+                [ renderInput mdl 1 Name ep.name (findFieldError model Name) mdlMsg epmsg
+                , renderInput mdl 2 Url ep.url (findFieldError model Url) mdlMsg epmsg
                 ]
             , div []
-                [ renderInput mdl 3 User ep.user (findFieldError model User) mdlMsg updateMsg
-                , renderInput mdl 4 Password ep.password (findFieldError model Password) mdlMsg updateMsg
+                [ renderInput mdl 3 User ep.user (findFieldError model User) mdlMsg epmsg
+                , renderInput mdl 4 Password ep.password (findFieldError model Password) mdlMsg epmsg
                 ]
             , div []
-                [ renderButton mdl ep "done" (commitMsg ep id) mdlMsg
-                , renderButton mdl ep "clear" cancelMsg mdlMsg
+                [ renderButton mdl ep "done" (epmsg (CommitEditor ep id)) mdlMsg
+                , renderButton mdl ep "clear" (epmsg CancelEditor) mdlMsg
                 ]
             ]
 
@@ -118,7 +124,8 @@ renderButton mdl ep icon onClick mdlMsg =
         ]
         [ Icon.i icon ]
 
-renderInput mdl id field value error mdlMsg updateMsg =
+
+renderInput mdl id field value error mdlMsg epMsg =
     case error of
         Nothing ->
             Textfield.render mdlMsg
@@ -127,7 +134,7 @@ renderInput mdl id field value error mdlMsg updateMsg =
                 [ Textfield.label (toString field)
                 , Textfield.floatingLabel
                 , Textfield.value value
-                , Options.onInput (\value -> updateMsg ( field, Value value ))
+                , Options.onInput (\value -> epMsg (UpdateEditor ( field, Value value )))
                 ]
                 []
 
@@ -139,6 +146,6 @@ renderInput mdl id field value error mdlMsg updateMsg =
                 , Textfield.floatingLabel
                 , Textfield.value value
                 , Textfield.error err
-                , Options.onInput (\value -> updateMsg ( field, Value value ))
+                , Options.onInput (\value -> epMsg (UpdateEditor ( field, Value value )))
                 ]
                 []

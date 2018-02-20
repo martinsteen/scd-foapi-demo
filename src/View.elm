@@ -91,7 +91,7 @@ cardView model =
                     []
 
                 Just editor ->
-                    [ EndpointEditor.render model.mdl editor Mdl CommitEdit CancelEdit UpdateEdit ]
+                    [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
             )
         ]
 

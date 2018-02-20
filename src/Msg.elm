@@ -15,10 +15,8 @@ type Msg
     | AuthResponse Dropbox.AuthorizeResult
     | FetchFileResponse (Result Dropbox.DownloadError Dropbox.DownloadResponse)
     | PutFileReponse (Result Dropbox.UploadError Dropbox.UploadResponse)
-    | Mdl (Material.Msg Msg)
     | RemoveEndpoint Endpoint
-    | CommitEdit Endpoint (Maybe String)
     | StartEdit Endpoint
     | StartAdd
-    | CancelEdit
-    | UpdateEdit ( EndpointEditor.Field, EndpointEditor.FieldContent )
+    | Mdl (Material.Msg Msg)
+    | EpEdit (EndpointEditor.Msg Msg)
