@@ -114,38 +114,33 @@ findFieldError model field =
         List.head (List.map (\x -> x.error) a)
 
 
-renderButton mdl ep icon onClick mdlMsg =
+renderButton mdl ep icon epMsg mdlMsg =
     Button.render mdlMsg
         [ 0 ]
         mdl
         [ Button.fab
         , Button.colored
-        , Options.onClick onClick
+        , Options.onClick epMsg
         ]
         [ Icon.i icon ]
 
 
 renderInput mdl id field value error mdlMsg epMsg =
-    case error of
-        Nothing ->
-            Textfield.render mdlMsg
-                [ id ]
-                mdl
-                [ Textfield.label (toString field)
-                , Textfield.floatingLabel
-                , Textfield.value value
-                , Options.onInput (\value -> epMsg (UpdateEditor ( field, Value value )))
-                ]
-                []
+    Textfield.render mdlMsg [ id ] mdl (fieldProperties field value epMsg error) []
 
-        Just err ->
-            Textfield.render mdlMsg
-                [ id ]
-                mdl
-                [ Textfield.label (toString field)
-                , Textfield.floatingLabel
-                , Textfield.value value
-                , Textfield.error err
-                , Options.onInput (\value -> epMsg (UpdateEditor ( field, Value value )))
-                ]
-                []
+
+fieldProperties field value epMsg maybeError =
+    let
+        common =
+            [ Textfield.label (toString field)
+            , Textfield.floatingLabel
+            , Options.onInput (\value -> epMsg (UpdateEditor ( field, Value value )))
+            , Textfield.value value
+            ]
+    in
+        case maybeError of
+            Nothing ->
+                common
+
+            Just err ->
+                (Textfield.error err) :: common
