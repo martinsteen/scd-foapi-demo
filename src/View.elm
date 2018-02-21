@@ -1,6 +1,7 @@
 module View exposing (view)
 
-import Html exposing (Html, map, text, div, h2, p, span)
+import Html exposing (Html, map, text, div, h1, h2, p, span, hr)
+import Html.Attributes exposing (href, class, style)
 import Material
 import Material.Scheme
 import Material.Button as Button
@@ -8,6 +9,7 @@ import Material.Options as Options exposing (css, cs)
 import Material.Chip as Chip
 import Material.Color as Color
 import Material.Icon as Icon
+import Material.Layout as Layout
 import Msg exposing (..)
 import Model exposing (..)
 import EndpointEditor
@@ -30,6 +32,19 @@ type alias Mdl =
     Material.Model
 
 
+view : Model -> Html Msg
+view model =
+    Layout.render Mdl
+        model.mdl
+        [ Layout.fixedHeader
+        ]
+        { header = [ h1 [ style [ ( "padding", "2rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
+        , drawer = []
+        , tabs = ( [], [] )
+        , main = [ viewLayout model ]
+        }
+
+
 white : Options.Property c m
 white =
     Color.text Color.white
@@ -47,53 +62,103 @@ errorView model =
 
 loginToDropBoxButton : Model -> Html Msg
 loginToDropBoxButton model =
-    case model.auth of
-        Nothing ->
-            Button.render Mdl
-                [ 0 ]
-                model.mdl
-                [ Options.onClick LogInToDropbox
-                ]
-                [ text "Log in to Dropbox" ]
-
-        Just auth ->
-            text ""
+    renderButton model "login" LogInToDropbox
 
 
-view : Model -> Html Msg
-view model =
+viewLayout : Model -> Html Msg
+viewLayout model =
     div []
-        [ h2 [] [ text "SimCorp Dimension front office API demo " ]
-        , loginToDropBoxButton model
-        , contentView model
+        [ h2 [] []
+        , renderIntroduction model
         , errorView model
         ]
         |> Material.Scheme.top
 
 
-contentView : Model -> Html Msg
-contentView model =
-    if List.isEmpty model.storage.endpoints then
-        text ""
-    else
-        cardView model
+renderIntroduction : Model -> Html Msg
+renderIntroduction model =
+    div []
+        [ h2 [] [ text "Getting Started" ]
+        , span
+            []
+            [ text """
+            This small web page demonstrates the used of the SimCorp Dimension front office web api.
+            With this aplication you will be able to create data incidents alerts.
+            In order to use this, you need a SimCord dimension installation that is configured to expose
+            API endpoints. You have configure this application with the endpoint details to get started.
+            """
+            ]
+        , renderEndpoints model
+        ]
 
 
-cardView : Model -> Html Msg
-cardView model =
+renderEndpoints : Model -> Html Msg
+renderEndpoints model =
+    let
+        ( html, html2 ) =
+            let
+                hasEndpoint =
+                    not (List.isEmpty model.storage.endpoints)
+
+                hasDropBox =
+                    (case model.auth of
+                        Just auth ->
+                            True
+
+                        Nothing ->
+                            False
+                    )
+            in
+                ( if (hasEndpoint) then
+                    [ text "You have the following endpoints defined"
+                    , renderConfiguredEndpoints model
+                    , text "You can add more here"
+                    , renderButton model "add" StartAdd
+                    , text "or you can modify the endpoints by clicking on them."
+                    ]
+                  else
+                    [ text "Currently there are no endpoints defined. You can add one here"
+                    , renderButton model "add" StartAdd
+                    ]
+                , if (hasDropBox) then
+                    [ text ". Your changes will be saved in dropbox"
+                    ]
+                  else
+                    [ text """. If you leave this page, you will have to add the
+                    endpoint the next time you use it.
+                    The application can store your data in dropBox, if
+                    you want that, go ahead and log in to dropbox here"""
+                    , loginToDropBoxButton model
+                    ]
+                )
+    in
+        div [] (html ++ html2 ++ [maybeRenderEndpointEditor model])
+
+
+renderConfiguredEndpoints : Model -> Html Msg
+renderConfiguredEndpoints model =
     span []
-        [ span []
-            [ renderEndpointChips model.storage.endpoints ]
-        , Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick StartAdd ] [ Icon.i "add" ]
-        , span []
-            (case model.editor of
+        [ renderEndpointChips model.storage.endpoints
+        ]
+
+
+maybeRenderEndpointEditor : Model -> Html Msg
+maybeRenderEndpointEditor model =
+    let
+        html =
+            case model.editor of
                 Nothing ->
                     []
 
                 Just editor ->
                     [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
-            )
-        ]
+    in
+        div [] html
+
+
+renderButton : Model -> String -> Msg -> Html Msg
+renderButton model text event =
+    Button.render Mdl [ 0 ] model.mdl [ Button.minifab, Button.colored, Options.onClick event ] [ Icon.i text ]
 
 
 renderEndpointChips : List Endpoint -> Html Msg
@@ -102,7 +167,7 @@ renderEndpointChips endpoints =
         (List.map
             (\endpoint ->
                 Chip.span
-                    [ Options.css "margin" "5px 5px"
+                    [ Options.css "margin" "0px 5px"
                     , Options.onClick (StartEdit endpoint)
                     , Chip.deleteIcon "clear"
                     , Chip.deleteClick (RemoveEndpoint endpoint)

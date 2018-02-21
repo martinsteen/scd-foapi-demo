@@ -118,7 +118,7 @@ renderButton mdl ep icon epMsg mdlMsg =
     Button.render mdlMsg
         [ 0 ]
         mdl
-        [ Button.fab
+        [ Button.minifab
         , Button.colored
         , Options.onClick epMsg
         ]
