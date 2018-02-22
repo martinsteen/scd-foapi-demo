@@ -79,11 +79,15 @@ renderIntroduction : Model -> Html Msg
 renderIntroduction model =
     div []
         [ h2 [] [ text "Getting Started" ]
-        , span
+        , Html.p
             []
             [ text """
             This small web page demonstrates the used of the SimCorp Dimension front office web api.
-            With this aplication you will be able to create data incidents alerts.
+            With this aplication you will be able to create data incidents alerts."""
+            ]
+        , Html.p
+            []
+            [ text """
             In order to use this, you need a SimCord dimension installation that is configured to expose
             API endpoints. You have configure this application with the endpoint details to get started.
             """
@@ -124,16 +128,24 @@ renderEndpoints model =
                     [ text ". Your changes will be saved in dropbox"
                     ]
                   else
-                    [ text """. If you leave this page, you will have to add the
+                    [ text """If you leave this page, you will have to add the
                     endpoint the next time you use it.
                     The application can store your data in dropBox, if
                     you want that, go ahead and log in to dropbox here"""
-                    , loginToDropBoxButton model
+                    , renderButton model "login" LogInToDropbox 
+                    , text "or you can modify the endpoints by clicking on them."
                     ]
                 )
     in
-        div [] (html ++ html2 ++ [maybeRenderEndpointEditor model])
-
+        div[] 
+        [
+            Html.p
+                [] html
+            , Html.p
+                [] html2
+            , Html.p
+                [] [maybeRenderEndpointEditor model]
+        ]
 
 renderConfiguredEndpoints : Model -> Html Msg
 renderConfiguredEndpoints model =
