@@ -10,6 +10,7 @@ import Material.Chip as Chip
 import Material.Color as Color
 import Material.Icon as Icon
 import Material.Layout as Layout
+import Material.Elevation as Elevation
 import Msg exposing (..)
 import Model exposing (..)
 import EndpointEditor
@@ -34,15 +35,16 @@ type alias Mdl =
 
 view : Model -> Html Msg
 view model =
-    Layout.render Mdl
-        model.mdl
-        [ Layout.fixedHeader
-        ]
-        { header = [ h1 [ style [ ( "padding", "2rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
-        , drawer = []
-        , tabs = ( [], [] )
-        , main = [ viewLayout model ]
-        }
+    Material.Scheme.top <|
+        Layout.render Mdl
+            model.mdl
+            [ Layout.fixedHeader
+            ]
+            { header = [ h1 [ style [ ( "padding", "2rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
+            , drawer = []
+            , tabs = ( [], [] )
+            , main = [ viewLayout model ]
+            }
 
 
 white : Options.Property c m
@@ -60,19 +62,16 @@ errorView model =
             text ""
 
 
-loginToDropBoxButton : Model -> Html Msg
-loginToDropBoxButton model =
-    renderButton model "login" LogInToDropbox
-
-
 viewLayout : Model -> Html Msg
 viewLayout model =
-    div []
+    Options.div
+        [ Options.center
+        , css "width" "80%"
+        ]
         [ h2 [] []
         , renderIntroduction model
         , errorView model
         ]
-        |> Material.Scheme.top
 
 
 renderIntroduction : Model -> Html Msg
@@ -132,20 +131,23 @@ renderEndpoints model =
                     endpoint the next time you use it.
                     The application can store your data in dropBox, if
                     you want that, go ahead and log in to dropbox here"""
-                    , renderButton model "login" LogInToDropbox 
+                    , renderButton model "login" LogInToDropbox
                     , text "or you can modify the endpoints by clicking on them."
                     ]
                 )
     in
-        div[] 
-        [
-            Html.p
-                [] html
+        Options.div []
+            [ Html.p
+                []
+                html
             , Html.p
-                [] html2
+                []
+                html2
             , Html.p
-                [] [maybeRenderEndpointEditor model]
-        ]
+                []
+                [ maybeRenderEndpointEditor model ]
+            ]
+
 
 renderConfiguredEndpoints : Model -> Html Msg
 renderConfiguredEndpoints model =
@@ -160,12 +162,19 @@ maybeRenderEndpointEditor model =
         html =
             case model.editor of
                 Nothing ->
-                    []
+                    text ""
 
                 Just editor ->
-                    [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
+                    Options.div
+                        [ Elevation.e6
+                        , Options.center
+                        , css "height" "296px"
+                        , css "width" "80%"
+                        , Color.background (Color.color Color.BlueGrey Color.S50)
+                        ]
+                        [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
     in
-        div [] html
+        div [] [ html ]
 
 
 renderButton : Model -> String -> Msg -> Html Msg
