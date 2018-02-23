@@ -1,6 +1,6 @@
 module View exposing (view)
 
-import Html exposing (Html, map, text, div, h1, h2, p, span, hr)
+import Html exposing (Html, map, text, div, h1, h2, h4, p, span, hr)
 import Html.Attributes exposing (href, class, style)
 import Material
 import Material.Scheme
@@ -15,6 +15,7 @@ import Msg exposing (..)
 import Model exposing (..)
 import EndpointEditor
 import Endpoint
+import Material.Grid exposing (grid, cell, size, Device(..), offset)
 
 
 type alias Msg =
@@ -40,31 +41,47 @@ view model =
             model.mdl
             [ Layout.fixedHeader
             ]
-            { header = [ h1 [ style [ ( "padding", "3rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
+            { header = [ h2 [ style [ ( "padding", "1rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
             , drawer = []
             , tabs = ( [], [] )
             , main = [ viewLayout model ]
             }
 
 
-
 viewLayout : Model -> Html Msg
 viewLayout model =
-    Options.div
-        [ Options.center
-        , css "margin-left" "20%"
-        , css "margin-right" "20%"
-        ]
-        [ h2 [] []
-        , Options.div [] [ renderIntroduction model ]
-        , Options.div [] [ errorView model ]
+    grid []
+        [ cell [  offset All 1, size All 10 ]
+            [ renderIntroduction model
+            ]
+        , cell [ offset All 1, size All 10 ]
+            [ renderAlerts model
+            ]
+        , cell [ offset All 1, size All 10 ]
+            [ errorView model
+            ]
         ]
 
+renderAlerts : Model -> Html Msg
+renderAlerts model =
+    if (List.isEmpty model.storage.endpoints) then
+        Html.p [][]
+    else
+        Html.p []
+            [ h2 [] [ text "Working with data incident alerts" ]
+            , hr [] []
+            , Html.p []
+                [ text """
+                In this section you will be able to issue data incident alerts aginst the system running behind the 
+                endpoint you defined in previos sections."""
+                ]
+            ]
 
 renderIntroduction : Model -> Html Msg
 renderIntroduction model =
     Html.p []
         [ h2 [] [ text "Getting Started" ]
+        , hr [] []
         , Html.p []
             [ text """
             This small web page demonstrates the used of the SimCorp Dimension front office web api.
@@ -117,7 +134,7 @@ renderEndpointParagraph model =
                     endpoint the next time you use it.
                     The application can store your data in dropBox, if
                     you want that, go ahead and log in to dropbox here"""
-                    , renderButton model "login" LogInToDropbox
+                    , renderButton model "cached" LogInToDropbox
                     ]
                 )
     in
@@ -143,8 +160,6 @@ maybeRenderEndpointEditor model =
                     Options.div
                         [ Elevation.e6
                         , Options.center
-                        , css "height" "296px"
-                        , css "width" "80%"
                         , Color.background (Color.color Color.BlueGrey Color.S50)
                         ]
                         [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
