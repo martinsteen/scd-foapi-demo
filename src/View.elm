@@ -40,63 +40,49 @@ view model =
             model.mdl
             [ Layout.fixedHeader
             ]
-            { header = [ h1 [ style [ ( "padding", "2rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
+            { header = [ h1 [ style [ ( "padding", "3rem" ) ] ] [ text "SimCorp Dimension front office API demo" ] ]
             , drawer = []
             , tabs = ( [], [] )
             , main = [ viewLayout model ]
             }
 
 
-white : Options.Property c m
-white =
-    Color.text Color.white
-
-
-errorView : Model -> Html Msg
-errorView model =
-    case model.error of
-        Just err ->
-            Html.code [] [ text ("Error --> " ++ err) ]
-
-        Nothing ->
-            text ""
-
 
 viewLayout : Model -> Html Msg
 viewLayout model =
     Options.div
         [ Options.center
-        , css "width" "80%"
+        , css "margin-left" "20%"
+        , css "margin-right" "20%"
         ]
         [ h2 [] []
-        , renderIntroduction model
-        , errorView model
+        , Options.div [] [ renderIntroduction model ]
+        , Options.div [] [ errorView model ]
         ]
 
 
 renderIntroduction : Model -> Html Msg
 renderIntroduction model =
-    div []
+    Html.p []
         [ h2 [] [ text "Getting Started" ]
-        , Html.p
-            []
+        , Html.p []
             [ text """
             This small web page demonstrates the used of the SimCorp Dimension front office web api.
             With this aplication you will be able to create data incidents alerts."""
             ]
-        , Html.p
-            []
+        , Html.p []
             [ text """
             In order to use this, you need a SimCord dimension installation that is configured to expose
             API endpoints. You have configure this application with the endpoint details to get started.
             """
             ]
-        , renderEndpoints model
+        ,  renderEndpointParagraph model
+        ,  maybeRenderEndpointEditor model
         ]
 
 
-renderEndpoints : Model -> Html Msg
-renderEndpoints model =
+renderEndpointParagraph : Model -> Html Msg
+renderEndpointParagraph model =
     let
         ( html, html2 ) =
             let
@@ -115,16 +101,16 @@ renderEndpoints model =
                 ( if (hasEndpoint) then
                     [ text "You have the following endpoints defined"
                     , renderConfiguredEndpoints model
-                    , text "You can add more here"
+                    , text "and you can add more here "
                     , renderButton model "add" StartAdd
-                    , text "or you can modify the endpoints by clicking on them."
+                    , text " or you can modify the endpoints by clicking on them."
                     ]
                   else
                     [ text "Currently there are no endpoints defined. You can add one here"
                     , renderButton model "add" StartAdd
                     ]
                 , if (hasDropBox) then
-                    [ text ". Your changes will be saved in dropbox"
+                    [ text "If you leave this page, your changes will automatically be saved in dropbox."
                     ]
                   else
                     [ text """If you leave this page, you will have to add the
@@ -132,21 +118,10 @@ renderEndpoints model =
                     The application can store your data in dropBox, if
                     you want that, go ahead and log in to dropbox here"""
                     , renderButton model "login" LogInToDropbox
-                    , text "or you can modify the endpoints by clicking on them."
                     ]
                 )
     in
-        Options.div []
-            [ Html.p
-                []
-                html
-            , Html.p
-                []
-                html2
-            , Html.p
-                []
-                [ maybeRenderEndpointEditor model ]
-            ]
+        Html.p [] (html ++ html2)
 
 
 renderConfiguredEndpoints : Model -> Html Msg
@@ -199,3 +174,14 @@ renderEndpointChips endpoints =
             )
             endpoints
         )
+
+
+errorView : Model -> Html Msg
+errorView model =
+    case model.error of
+        Just err ->
+            Html.code [] [ text ("Error --> " ++ err) ]
+
+        Nothing ->
+            text ""
+
