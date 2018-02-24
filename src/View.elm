@@ -51,7 +51,7 @@ view model =
 viewLayout : Model -> Html Msg
 viewLayout model =
     grid []
-        [ cell [  offset All 1, size All 10 ]
+        [ cell [ offset All 1, size All 10 ]
             [ renderIntroduction model
             ]
         , cell [ offset All 1, size All 10 ]
@@ -62,20 +62,22 @@ viewLayout model =
             ]
         ]
 
+
 renderAlerts : Model -> Html Msg
 renderAlerts model =
     if (List.isEmpty model.storage.endpoints) then
-        Html.p [][]
+        text ""
     else
         Html.p []
             [ h2 [] [ text "Working with data incident alerts" ]
             , hr [] []
             , Html.p []
                 [ text """
-                In this section you will be able to issue data incident alerts aginst the system running behind the 
+                In this section you will be able to issue data incident alerts aginst the system running behind the
                 endpoint you defined in previos sections."""
                 ]
             ]
+
 
 renderIntroduction : Model -> Html Msg
 renderIntroduction model =
@@ -84,17 +86,18 @@ renderIntroduction model =
         , hr [] []
         , Html.p []
             [ text """
-            This small web page demonstrates the used of the SimCorp Dimension front office web api.
-            With this aplication you will be able to create data incidents alerts."""
-            ]
-        , Html.p []
-            [ text """
-            In order to use this, you need a SimCord dimension installation that is configured to expose
-            API endpoints. You have configure this application with the endpoint details to get started.
+            This small web page is an example of an application that uses the SimCorp Dimension front office web api.
+            With this aplication you will be able to create data incidents alerts.
+            To get started you need a running installation that is configured to expose these 
+            API endpoints and you need to configure this application with the details of these.
             """
             ]
-        ,  renderEndpointParagraph model
-        ,  maybeRenderEndpointEditor model
+        , renderEndpointParagraph model
+        , grid []
+            [ cell [ offset All 1, size All 10 ]
+                [ maybeRenderEndpointEditor model
+                ]
+            ]
         ]
 
 
@@ -150,26 +153,23 @@ renderConfiguredEndpoints model =
 
 maybeRenderEndpointEditor : Model -> Html Msg
 maybeRenderEndpointEditor model =
-    let
-        html =
-            case model.editor of
-                Nothing ->
-                    text ""
+    case model.editor of
+        Nothing ->
+            text ""
 
-                Just editor ->
-                    Options.div
-                        [ Elevation.e6
-                        , Options.center
-                        , Color.background (Color.color Color.BlueGrey Color.S50)
-                        ]
-                        [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
-    in
-        div [] [ html ]
+        Just editor ->
+            Options.div
+                [ Elevation.e6
+                , Options.center
+                , css "padding" "10px"
+                , Color.background (Color.color Color.BlueGrey Color.S50)
+                ]
+                [ EndpointEditor.render model.mdl editor Mdl EpEdit ]
 
 
 renderButton : Model -> String -> Msg -> Html Msg
 renderButton model text event =
-    Button.render Mdl [ 0 ] model.mdl [ Button.minifab, Button.colored, Options.onClick event ] [ Icon.i text ]
+    Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick event ] [ Icon.i text ]
 
 
 renderEndpointChips : List Endpoint -> Html Msg
@@ -199,4 +199,3 @@ errorView model =
 
         Nothing ->
             text ""
-

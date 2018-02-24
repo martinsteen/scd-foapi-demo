@@ -1,12 +1,14 @@
 module EndpointEditor exposing (Model, Msg(..), FieldContent(..), Field(..), forCreate, forModify, update, render)
 
 import Html exposing (Html, text, div, h2, p, span)
+import Html.Attributes exposing (style)
 import Material
 import Material.Button as Button
 import Material.Textfield as Textfield
 import Material.Options as Options exposing (css, cs)
 import Material.Icon as Icon
 import Endpoint
+import Material.Grid exposing (grid, cell, size, Device(..), offset)
 
 
 type Msg msg
@@ -89,16 +91,20 @@ render mdl model mdlMsg epmsg =
         ( ep, id ) =
             ( model.endpoint, model.id )
     in
-        Options.div [ css "margin" "10%" ]
-            [ div []
+        grid []
+            [ cell [ size All 4 ]
                 [ renderInput mdl 1 Name ep.name (findFieldError model Name) mdlMsg epmsg
-                , renderInput mdl 2 Url ep.url (findFieldError model Url) mdlMsg epmsg
                 ]
-            , div []
+            , cell [ offset All 1, size All 6 ]
+                [ renderInput mdl 2 Url ep.url (findFieldError model Url) mdlMsg epmsg
+                ]
+            , cell [ size All 4 ]
                 [ renderInput mdl 3 User ep.user (findFieldError model User) mdlMsg epmsg
-                , renderInput mdl 4 Password ep.password (findFieldError model Password) mdlMsg epmsg
                 ]
-            , div []
+            , cell [ offset All 1, size All 3 ]
+                [ renderInput mdl 4 Password ep.password (findFieldError model Password) mdlMsg epmsg
+                ]
+            , cell [ size All 10 ]
                 [ renderButton mdl ep "done" (epmsg (CommitEditor ep id)) mdlMsg
                 , renderButton mdl ep "clear" (epmsg CancelEditor) mdlMsg
                 ]
@@ -118,7 +124,7 @@ renderButton mdl ep icon epMsg mdlMsg =
     Button.render mdlMsg
         [ 0 ]
         mdl
-        [ Button.minifab
+        [ Button.fab
         , Button.colored
         , Options.onClick epMsg
         ]
@@ -126,7 +132,12 @@ renderButton mdl ep icon epMsg mdlMsg =
 
 
 renderInput mdl id field value error mdlMsg epMsg =
-    Textfield.render mdlMsg [ id ] mdl (fieldProperties field value epMsg error) []
+    Textfield.render
+        mdlMsg
+        [ id ]
+        mdl
+        (fieldProperties field value epMsg error)
+        []
 
 
 fieldProperties field value epMsg maybeError =
