@@ -88,7 +88,7 @@ renderIntroduction model =
             [ text """
             This small web page is an example of an application that uses the SimCorp Dimension front office web api.
             With this aplication you will be able to create data incidents alerts.
-            To get started you need a running installation that is configured to expose these 
+            To get started you need a running installation that is configured to expose these
             API endpoints and you need to configure this application with the details of these.
             """
             ]
@@ -169,7 +169,7 @@ maybeRenderEndpointEditor model =
 
 renderButton : Model -> String -> Msg -> Html Msg
 renderButton model text event =
-    Button.render Mdl [ 0 ] model.mdl [ Button.fab, Button.colored, Options.onClick event ] [ Icon.i text ]
+    Button.render Mdl [ 0 ] model.mdl [ Button.minifab, Button.colored, Options.onClick event ] [ Icon.i text ]
 
 
 renderEndpointChips : List Endpoint -> Html Msg

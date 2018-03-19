@@ -1,4 +1,4 @@
-module Storage exposing (Storage, findUpdateProblems, update, decode, uploadTask, downloadTask)
+module Storage exposing (Storage, findUpdateProblems, update, delete, decode, uploadTask, downloadTask)
 
 import Json.Encode exposing (Value, object, string)
 import Json.Decode exposing (int, string, float, Decoder, list)
@@ -92,6 +92,11 @@ encode storage =
         |> Json.Encode.encode 2
 
 
+delete : Storage -> Endpoint -> Storage
+delete storage endpoint =
+    { storage | endpoints = removeEndpoint endpoint storage.endpoints }
+
+
 update : Storage -> Endpoint -> Maybe String -> Storage
 update storage endpoint oldName =
     case oldName of
@@ -109,6 +114,15 @@ replaceEndpoint endpoint oldName endpoints =
             List.partition (\x -> x.name == oldName) endpoints
     in
         List.sortWith compareEnpoint (endpoint :: different)
+
+
+removeEndpoint : Endpoint -> List Endpoint -> List Endpoint
+removeEndpoint endpoint endpoints =
+    let
+        ( same, different ) =
+            List.partition (\x -> x.name == endpoint.name) endpoints
+    in
+        different
 
 
 addEndpoint : Endpoint -> List Endpoint -> List Endpoint
