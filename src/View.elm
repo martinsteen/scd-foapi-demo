@@ -86,10 +86,9 @@ renderIntroduction model =
         , hr [] []
         , Html.p []
             [ text """
-            This small web page is an example of an application that uses the SimCorp Dimension front office web api.
-            With this aplication you will be able to create data incidents alerts.
-            To get started you need a running installation that is configured to expose these
-            API endpoints and you need to configure this application with the details of these.
+            This small web page is an example of an application that uses the SimCorp Dimension front office web api. With this
+            aplication you will be able to create data incidents alerts. To get started you need a running installation that is
+            configured to expose these API endpoints and you need to configure this application with the details of these.
             """
             ]
         , renderEndpointParagraph model
@@ -123,11 +122,12 @@ renderEndpointParagraph model =
                     , renderConfiguredEndpoints model
                     , text "and you can add more here "
                     , renderButton model "add" StartAdd
-                    , text " or you can modify the endpoints by clicking on them."
+                    , text " or you can modify the endpoints by clicking on them. "
                     ]
                   else
-                    [ text "Currently there are no endpoints defined. You can add one here"
+                    [ text "Currently there are no endpoints defined. You can add one here. "
                     , renderButton model "add" StartAdd
+                    , text " "
                     ]
                 , if (hasDropBox) then
                     [ text "If you leave this page, your changes will automatically be saved in dropbox."

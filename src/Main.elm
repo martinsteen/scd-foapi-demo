@@ -8,6 +8,7 @@ import Dropbox
 import View
 import Storage
 import EndpointEditor
+import AlertEditor
 import Task
 import Endpoint
 
@@ -37,6 +38,7 @@ initialModel location =
         { endpoints = [] }
     , mdl = Material.model
     , editor = Nothing
+    , alertEditors = []
     }
 
 
@@ -96,6 +98,9 @@ update msg model =
 
         EpEdit (EndpointEditor.UpdateEditor ( field, fieldInput )) ->
             ( updateEditor model field fieldInput, Cmd.none )
+
+        AlertEdit alertMsg ->
+            ( model, Cmd.none )
 
         EpEdit EndpointEditor.CancelEditor ->
             ( { model | editor = Nothing }, Cmd.none )

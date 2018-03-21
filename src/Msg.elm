@@ -4,6 +4,7 @@ import Dropbox
 import Material
 import Endpoint
 import EndpointEditor
+import AlertEditor
 
 
 type alias Endpoint =
@@ -20,3 +21,4 @@ type Msg
     | StartAdd
     | Mdl (Material.Msg Msg)
     | EpEdit (EndpointEditor.Msg Msg)
+    | AlertEdit (AlertEditor.Msg Msg)
