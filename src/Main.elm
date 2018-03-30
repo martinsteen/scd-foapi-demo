@@ -88,7 +88,11 @@ update msg model =
             Material.update Mdl msg_ model
 
         RemoveEndpoint endpoint ->
-            ( { model | storage = Storage.delete model.storage endpoint }, Cmd.none )
+            let
+                model_ =
+                    { model | storage = Storage.delete model.storage endpoint, editor = Nothing }
+            in
+                ( model_, updloadIfConnected model_ )
 
         StartAdd ->
             ( { model | editor = Just (EndpointEditor.forCreate defaultEndpoint) }, Cmd.none )
